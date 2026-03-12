@@ -35,12 +35,12 @@
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
 
-        /* 🔵 激活态：蓝色发光，无黑边 */
+      /* 🍷 高级莓果红激活态：深邃、通透、不刺眼 */
         .is-active, .is-active path, .is-active rect, .is-active circle { 
-            fill: var(--active) !important; 
-            stroke: #93C5FD !important;
-            stroke-width: 1; 
-            filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.5)); 
+            fill: #FB7185 !important; /* Tailwind Rose-400: 柔和的高级红 */
+            stroke: #FDA4AF !important; /* 极细的浅色边缘，增加精致感 */
+            stroke-width: 0.8; 
+            filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.45)); /* 柔和红色光晕 */
         }
 
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
