@@ -10,18 +10,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { 
-            --bg-main: #F1F5F9;    /* 稍微调深的底色，衬托卡片悬浮 */
+            --bg-main: #F1F5F9; 
             --brand-main: #6366F1; 
-            --rested: #E2E8F0;     /* 已就绪：淡淡灰 */
-            --recovering: #FED7AA; /* 恢复中：浅橙色 */
-            --fatigued: #FECACA;   /* 刚练完：淡红色 */
-            --active: #60A5FA;     /* 选中态：清爽蓝 */
+            --rested: #E2E8F0;     
+            --recovering: #FED7AA; 
+            --fatigued: #FECACA;   
+            --active: #FB7185;     /* 高级莓果红 */
         }
         * { -webkit-touch-callout: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
         input, textarea { -webkit-user-select: auto; user-select: auto; }
         body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; padding-top: env(safe-area-inset-top); margin: 0; }
         
-        /* 核心悬浮效果：深阴影 + 圆润边角 */
         .glass-card { 
             background: #FFFFFF; 
             border-radius: 32px; 
@@ -35,12 +34,12 @@
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
 
-      /* 🍷 高级莓果红激活态：深邃、通透、不刺眼 */
+        /* 🍷 高级莓果红激活态 */
         .is-active, .is-active path, .is-active rect, .is-active circle { 
-            fill: #FB7185 !important; /* Tailwind Rose-400: 柔和的高级红 */
-            stroke: #FDA4AF !important; /* 极细的浅色边缘，增加精致感 */
+            fill: #FB7185 !important; 
+            stroke: #FDA4AF !important;
             stroke-width: 0.8; 
-            filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.45)); /* 柔和红色光晕 */
+            filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.45)); 
         }
 
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
@@ -60,7 +59,6 @@
         .day-today { background: var(--brand-main) !important; color: white !important; }
         .workout-dot { width: 4px; height: 4px; border-radius: 50%; margin: 1px; }
         
-        /* 记录卡片悬浮 */
         .record-card { border-left: 8px solid transparent; position: relative; transition: transform 0.2s; }
         .record-card:active { transform: scale(0.98); }
         .action-btn { position: absolute; bottom: 14px; font-size: 18px; padding: 4px; color: #CBD5E1; }
@@ -227,25 +225,23 @@
         document.body.addEventListener('click', (e) => {
             const group = e.target.closest('[data-part]'); 
             if (!group) return;
+
+            // 📳 短促震动
+            if (window.navigator.vibrate) window.navigator.vibrate(15);
+
             const partName = group.getAttribute('data-part');
             const pieces = document.querySelectorAll(`[data-part="${partName}"]`);
             const isActive = group.classList.contains('is-active');
             pieces.forEach(p => { if (isActive) p.classList.remove('is-active'); else p.classList.add('is-active'); });
             if (isActive) selectedParts.delete(partName); else selectedParts.add(partName);
             updateStatusUI();
-            const group = e.target.closest('[data-part]'); 
-            if (!group) return;
-
-            // 📳 添加短促震动 (15毫秒)，模拟物理按键反馈
-            if (window.navigator.vibrate) {
-                window.navigator.vibrate(15);
-            }
         });
 
         function toggleSpecial(mode) { 
             const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch'); 
             selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode); 
             btn.classList.toggle('active'); 
+            if (window.navigator.vibrate) window.navigator.vibrate(15);
             updateStatusUI(); 
         }
 
@@ -259,11 +255,12 @@
                 selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
                 localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); 
                 localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
-                location.reload(); 
-                if (window.navigator.vibrate) {
-                window.navigator.vibrate([40, 30, 40]);
-            }
+                
+                // 📳 成功震动并延迟刷新
+                if (window.navigator.vibrate) window.navigator.vibrate([40, 30, 40]);
+                setTimeout(() => location.reload(), 300);
             } else {
+                if (window.navigator.vibrate) window.navigator.vibrate(30);
                 this.innerText = '完成训练 FINISH'; this.classList.replace('bg-indigo-600', 'bg-rose-500');
                 timer = setInterval(() => { seconds++; const h = Math.floor(seconds/3600).toString().padStart(2,'0'); const m = Math.floor((seconds%3600)/60).toString().padStart(2,'0'); const s = (seconds%60).toString().padStart(2,'0'); document.getElementById('timer-display').innerText = `${h}:${m}:${s}`; }, 1000);
             }
