@@ -19,11 +19,11 @@
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
-        .is-active, .is-active path, .is-active rect, .is-active circle { 
-            fill: var(--active) !important; 
-            stroke: #000; 
-            stroke-width: 1.5; 
-            filter: drop-shadow(0 0 8px rgba(251, 113, 133, 0.4)); 
+    .is-active, .is-active path, .is-active rect, .is-active circle { 
+            fill: #60A5FA !important; /* 蓝色填充 (Tailwind blue-400) */
+            stroke: #93C5FD;        /* 极淡的蓝色描边，增加层次 */
+            stroke-width: 1; 
+            filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.6)); /* 蓝色发光 */
         }
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
         .status-ready { background: #F1F5F9; color: #64748B; }
@@ -48,7 +48,7 @@
 <body>
     <div id="workout-view" class="flex flex-col min-h-screen px-6 pb-32 text-center">
         <header class="pt-8 pb-4">
-            <h1 class="text-4xl font-black tracking-tighter italic text-indigo-950 text-center">FITLOG<span class="text-rose-500">.</span></h1>
+            <h1 class="text-4xl font-black tracking-tighter italic text-indigo-950 text-center">Fitlog<span class="text-rose-500">.</span></h1>
         </header>
 
         <main class="flex-1 flex flex-col justify-center max-w-md mx-auto w-full space-y-4">
