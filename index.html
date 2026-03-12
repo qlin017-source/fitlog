@@ -14,7 +14,7 @@
         * { -webkit-touch-callout: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
         input, textarea { -webkit-user-select: auto; user-select: auto; }
         body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; padding-top: env(safe-area-inset-top); margin: 0; overflow-x: hidden; }
-        .glass-card { background: #FFFFFF; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border: 1px solid rgba(255, 255, 255, 1); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass-card { background: #FFFFFF; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border: 1px solid rgba(255, 255, 255, 1); }
         .muscle-slice { stroke: #FFF; stroke-width: 1.2; transition: all 0.4s ease; cursor: pointer; }
         .no-click { cursor: default; pointer-events: none; opacity: 0.6; } 
         .heat-rested { fill: var(--rested); }
@@ -23,39 +23,38 @@
         .is-active, .is-active path, .is-active rect, .is-active circle { fill: #FB7185 !important; stroke: #FDA4AF !important; stroke-width: 0.8; filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.45)); }
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
         .status-ready { background: #F1F5F9; color: #64748B; }
+        .status-recovering { background: #FEF3C7; color: #92400E; }
+        .status-training { background: #DBEAFE; color: #1E40AF; }
         .mode-btn { padding: 12px 24px; border-radius: 16px; font-weight: 900; font-size: 14px; border: 2px solid #F1F5F9; background: #FFF; color: #64748B; transition: all 0.3s; }
         .mode-btn.active { background: var(--brand-main); color: white; border-color: var(--brand-main); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
-        input[type=range] { -webkit-appearance: none; background: #E2E8F0; height: 10px; border-radius: 5px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 32px; width: 32px; border-radius: 50%; background: var(--brand-main); border: 4px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input[type=range] { -webkit-appearance: none; background: #E2E8F0; height: 6px; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--brand-main); border: 3px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .nav-active { color: var(--brand-main) !important; font-weight: 900; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; }
         .day-today { background: var(--brand-main) !important; color: white !important; }
-        .record-card { border-left: 8px solid transparent; border-radius: 20px; }
-        .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
-        .color-dot.selected { transform: scale(1.2); border-color: white; box-shadow: 0 0 0 2px currentColor; }
-        
-        /* 训练中布局微调 */
-        .training-active .hide-on-train { display: none !important; }
-        .training-active #big-timer-container { display: block !important; }
-        #big-timer-container { display: none; }
+        .workout-dot { width: 4px; height: 4px; border-radius: 50%; margin: 1px; }
+        .record-card { border-left: 8px solid transparent; position: relative; transition: transform 0.2s; border-radius: 20px; }
+        .action-btn { position: absolute; bottom: 14px; font-size: 18px; color: #CBD5E1; }
+        .delete-btn { right: 16px; }
+        .edit-btn { right: 48px; }
+        .supp-card { transition: all 0.3s; border: 2px solid transparent; }
+        .supp-card.selected { border-color: var(--brand-main); background: #F8FAFF; }
+        .streak-badge { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; padding: 10px 20px; border-radius: 20px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
+        /* 颜色选择器：整齐的 3列 布局 */
+        .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; position: relative; }
+        .color-dot.selected { transform: scale(1.2); border-color: white; box-shadow: 0 0 0 2px currentColor; z-index: 10; }
     </style>
 </head>
 <body>
     <div id="workout-view" class="flex flex-col min-h-screen px-6 pb-32">
-        <header class="pt-8 pb-4 text-center hide-on-train"><h1 class="text-4xl font-black tracking-tighter italic text-indigo-950">FitLog<span class="text-rose-500">.</span></h1></header>
-        
-        <main class="flex-1 flex flex-col justify-center max-w-md mx-auto w-full space-y-4">
-            <section id="main-card" class="glass-card p-6 flex flex-col items-center">
-                <div id="big-timer-container" class="w-full text-center py-4">
-                    <p class="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-1">Duration / 持续用时</p>
-                    <h3 class="text-7xl font-black tabular-nums tracking-tighter text-indigo-950" id="timer-display">00:00:00</h3>
-                </div>
-
-                <div id="model-container" class="hide-on-train flex justify-around items-start w-full mt-2 mb-2">
+        <header class="pt-8 pb-4 text-center"><h1 class="text-4xl font-black tracking-tighter italic text-indigo-950">FitLog<span class="text-rose-500">.</span></h1></header>
+        <main class="flex-1 flex flex-col justify-center max-w-md mx-auto w-full space-y-6">
+            <section class="glass-card p-6 flex flex-col items-center">
+                <div class="flex justify-around items-start w-full mt-2 mb-2">
                     <div class="flex-1 flex flex-col items-center">
                         <span class="text-[10px] font-black text-slate-300 mb-4 uppercase">正面</span>
-                        <svg viewBox="0 0 100 160" class="w-28 h-auto overflow-visible">
+                        <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" /> 
                             <circle data-part="肩膀" cx="31" cy="29" r="7" class="muscle-slice heat-rested" />
                             <circle data-part="肩膀" cx="69" cy="29" r="7" class="muscle-slice heat-rested" />
@@ -63,69 +62,66 @@
                             <g data-part="核心">
                                 <rect x="41" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
                                 <rect x="41" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
+                                <rect x="41" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
                             </g>
                             <rect data-part="大臂" x="18" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" /><rect data-part="大臂" x="73" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" />
+                            <rect data-part="小臂" x="15" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" /><rect data-part="小臂" x="77" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" />
                             <rect data-part="大腿" x="38" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" /><rect data-part="大腿" x="51" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" />
+                            <rect data-part="小腿" x="39" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" /><rect data-part="小腿" x="52" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" />
                         </svg>
                     </div>
                     <div class="flex-1 flex flex-col items-center">
                         <span class="text-[10px] font-black text-slate-300 mb-4 uppercase">背面</span>
-                        <svg viewBox="0 0 100 160" class="w-28 h-auto overflow-visible">
+                        <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" />
                             <path data-part="背部" d="M28 28 q22 -6 44 0 l-4 16 h-36 z" class="muscle-slice heat-rested" />
                             <g data-part="臀部">
                                 <circle cx="43" cy="64" r="11" class="muscle-slice heat-rested" /><circle cx="57" cy="64" r="11" class="muscle-slice heat-rested" />
                             </g>
                             <rect data-part="大腿" x="40" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" /><rect data-part="大腿" x="50" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" />
+                            <rect data-part="小腿" x="41" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" /><rect data-part="小腿" x="51" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" />
                         </svg>
                     </div>
                 </div>
-
                 <div id="recovery-status" class="flex flex-wrap justify-center gap-1 min-h-[22px] mb-4"></div>
-                
-                <div class="flex gap-3 w-full mt-2 hide-on-train">
+                <div class="flex gap-3 w-full mt-2">
                     <button id="btn-cardio" onclick="toggleSpecial('有氧')" class="mode-btn flex-1 py-3 shadow-sm">🏃 有氧</button>
                     <button id="btn-stretch" onclick="toggleSpecial('拉伸')" class="mode-btn flex-1 py-3 shadow-sm">🧘 拉伸</button>
                 </div>
-
-                <div id="quick-repeat-container" class="w-full mt-4 hidden hide-on-train">
+                <div id="quick-repeat-container" class="w-full mt-4 hidden">
                     <button onclick="applyLastWorkout()" class="w-full bg-white border-2 border-slate-100 py-3 px-4 rounded-2xl flex items-center justify-between active:scale-95 transition-all">
-                        <div class="flex items-center gap-3"><div id="last-color-dot" class="w-3 h-3 rounded-full"></div><span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">复刻上次</span></div>
+                        <div class="flex items-center gap-3">
+                            <div id="last-color-dot" class="w-3 h-3 rounded-full shadow-sm"></div>
+                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter">复刻上次</span>
+                        </div>
                         <span id="last-workout-info" class="text-[10px] font-bold text-indigo-950 truncate ml-2"></span>
                     </button>
                 </div>
-
-                <button id="go-btn" class="w-full mt-6 bg-slate-400 text-white py-6 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">请选择部位</button>
+                <button id="go-btn" class="w-full mt-2 bg-slate-400 text-white py-5 px-6 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">请选择部位</button>
             </section>
-
-            <section class="glass-card p-6 space-y-10">
-                <div class="space-y-6">
-                    <div class="flex justify-between items-end">
-                        <p class="text-[12px] font-black text-indigo-900 uppercase">Weight / 重量</p>
-                        <span id="weight-val" class="text-5xl font-black text-rose-500 italic">2 <small class="text-lg not-italic">kg</small></span>
-                    </div>
-                    <input type="range" id="weight-slider" min="0" max="100" step="2" value="2" class="w-full">
-                </div>
-
-                <div class="space-y-6">
-                    <div class="flex justify-between items-end">
-                        <p class="text-[12px] font-black text-indigo-900 uppercase">Intensity / 强度</p>
-                        <span id="intensity-val" class="text-xl font-black text-indigo-500">轻松自如</span>
-                    </div>
-                    <input type="range" id="intensity-slider" min="1" max="5" value="1" class="w-full">
-                </div>
-
-                <div class="flex justify-between items-center pt-2">
+            <section class="glass-card p-6 space-y-6 text-left">
+                <div class="flex justify-between items-center">
+                    <div><p class="text-[10px] font-black text-slate-400 uppercase">用时</p><h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3></div>
                     <div id="color-palette" class="grid grid-cols-3 gap-3">
                         <div class="color-dot bg-indigo-950 text-indigo-950 selected" data-color="#1E1B4B" onclick="selectColor(this)"></div>
-                        <div class="color-dot bg-white border border-slate-200 text-white" data-color="#FFFFFF" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-white border text-white" data-color="#FFFFFF" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-rose-500 text-rose-500" data-color="#F43F5E" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-emerald-500 text-emerald-500" data-color="#10B981" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-sky-500 text-sky-500" data-color="#0EA5E9" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-violet-600 text-violet-600" data-color="#7C3AED" onclick="selectColor(this)"></div>
                     </div>
-                    <textarea id="note-field" rows="1" placeholder="心得..." class="flex-1 ml-6 bg-slate-50 border-none rounded-2xl p-4 text-sm outline-none"></textarea>
                 </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <div class="flex justify-between"><p class="text-[10px] font-black text-indigo-900 uppercase">重量</p><span id="weight-val" class="text-xs font-black text-rose-500">2 kg</span></div>
+                        <input type="range" id="weight-slider" min="0" max="100" step="2" value="2" class="w-full">
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between"><p class="text-[10px] font-black text-indigo-900 uppercase">强度</p><span id="intensity-val" class="text-xs font-black text-indigo-500">轻松自如</span></div>
+                        <input type="range" id="intensity-slider" min="1" max="5" value="1" class="w-full">
+                    </div>
+                </div>
+                <textarea id="note-field" rows="1" placeholder="今日训练心得..." class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm outline-none"></textarea>
             </section>
         </main>
     </div>
@@ -137,7 +133,7 @@
     </div>
 
     <div id="calendar-view" class="px-6 pt-12 pb-32 hidden">
-        <header class="text-center mb-6"><h2 class="text-xl font-black text-indigo-900 uppercase mb-4">训练记录</h2><div class="flex justify-center"><div class="streak-badge flex items-center gap-2" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color:white; padding:10px 20px; border-radius:20px; font-weight:900;">🔥 连续打卡 <span id="streak-count" class="text-2xl">0</span> 天</div></div></header>
+        <header class="text-center mb-6"><h2 class="text-xl font-black text-indigo-900 uppercase mb-4">训练记录</h2><div class="flex justify-center"><div class="streak-badge flex items-center gap-2"><span>🔥 连续打卡</span><span id="streak-count" class="text-2xl">0</span><span>天</span></div></div></header>
         <div class="max-w-md mx-auto space-y-6"><div class="glass-card p-6"><p class="text-center font-black mb-4 text-xs text-slate-400" id="calendar-title"></p><div class="calendar-grid" id="calendar-days"></div></div><div id="history-list" class="space-y-4"></div></div>
     </div>
 
@@ -148,13 +144,13 @@
     </nav>
 
     <script>
-        let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v96')) || {};
-        let records = JSON.parse(localStorage.getItem('fitlog_logs_v96')) || [];
+        let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v94')) || {};
+        let records = JSON.parse(localStorage.getItem('fitlog_logs_v94')) || [];
         let selectedParts = new Set(), selectedSupps = new Set(), selectedColor = '#1E1B4B', timer, seconds = 0;
         const intensityLabels = ["", "轻松自如", "微微出汗", "呼吸急促", "肌肉酸胀", "力竭边缘"];
         const suppConfigs = [{ id: 'pro', name: '蛋白粉', icon: '🍗', unit: '克', max: 60, def: 30 },{ id: 'cre', name: '肌酸', icon: '⚡', unit: '克', max: 10, def: 5 },{ id: 'pre', name: '氮泵', icon: '🔥', unit: '勺', max: 2, def: 1 },{ id: 'fish', name: '鱼油', icon: '🐟', unit: '粒', max: 4, def: 2 }];
 
-        function init() { renderCalendar(); updateHeatmap(); renderSupps(); updateStatusUI(); updateQuickRepeatUI(); }
+        function init() { renderCalendar(); updateHeatmap(); renderSupps(); updateStatusUI(); calculateStreak(); updateQuickRepeatUI(); }
         
         function showView(view) {
             document.getElementById('workout-view').classList.toggle('hidden', view !== 'workout');
@@ -164,39 +160,22 @@
                 const btn = document.getElementById(`nav-${item}`);
                 btn.className = item === view ? 'flex flex-col items-center gap-1 nav-active' : 'flex flex-col items-center gap-1 text-slate-300';
             });
-            if (view === 'calendar') { renderHistory(); renderCalendar(); }
+            if (view === 'calendar') { renderHistory(); calculateStreak(); renderCalendar(); }
         }
 
-        document.getElementById('go-btn').onclick = function() {
-            if (this.innerText.includes('完成')) {
-                const now = new Date();
-                records.push({ id: Date.now(), type: 'workout', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: document.getElementById('timer-display').innerText, parts: Array.from(selectedParts).join(' · '), weight: document.getElementById('weight-val').innerText, intensity: document.getElementById('intensity-val').innerText, color: selectedColor, note: document.getElementById('note-field').value });
-                selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
-                saveAndRefetch(true); 
-            } else {
-                document.body.classList.add('training-active');
-                this.innerText = '完成训练 FINISH'; 
-                this.classList.replace('bg-indigo-600', 'bg-rose-500');
-                timer = setInterval(() => { 
-                    seconds++; 
-                    const h = Math.floor(seconds/3600).toString().padStart(2,'0'); 
-                    const m = Math.floor((seconds%3600)/60).toString().padStart(2,'0'); 
-                    const s = (seconds%60).toString().padStart(2,'0'); 
-                    document.getElementById('timer-display').innerText = `${h}:${m}:${s}`; 
-                }, 1000);
-            }
-        };
-
         function saveAndRefetch(shouldCelebrate) {
-            localStorage.setItem('fitlog_logs_v96', JSON.stringify(records)); 
-            localStorage.setItem('fitlog_rec_v96', JSON.stringify(recoveryData));
+            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); 
+            localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
             if (shouldCelebrate) {
                 fireCelebration();
+                if (window.navigator.vibrate) window.navigator.vibrate([40, 30, 40, 30, 80]);
+                // 修改：延迟一秒后自动跳转历史页面，不再强制刷新
                 setTimeout(() => { 
-                    document.body.classList.remove('training-active');
-                    resetWorkoutState();
                     showView('calendar'); 
+                    resetWorkoutState(); 
                 }, 1000);
+            } else {
+                showView('calendar');
             }
         }
 
@@ -212,27 +191,46 @@
             updateStatusUI(); updateHeatmap(); updateQuickRepeatUI();
         }
 
+        // --- 其他核心逻辑 ---
         function selectColor(el) { document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected')); el.classList.add('selected'); selectedColor = el.getAttribute('data-color'); }
         function updateHeatmap() { document.querySelectorAll('.muscle-slice').forEach(slice => { const part = slice.getAttribute('data-part'); if (!part) return; const hrs = (Date.now() - (recoveryData[part] || 0)) / (1000 * 60 * 60); slice.classList.remove('heat-rested', 'heat-recovering', 'heat-fatigued'); if (hrs < 24) slice.classList.add('heat-fatigued'); else if (hrs < 48) slice.classList.add('heat-recovering'); else slice.classList.add('heat-rested'); }); }
         function updateStatusUI() {
             const statusBox = document.getElementById('recovery-status'); const startBtn = document.getElementById('go-btn'); statusBox.innerHTML = '';
-            selectedParts.forEach(p => { const tag = document.createElement('span'); tag.className = 'status-tag status-ready'; tag.innerText = p; statusBox.appendChild(tag); });
-            if (!startBtn.innerText.includes('完成')) {
-                if (selectedParts.size > 0) { startBtn.innerText = `开始训练 ${Array.from(selectedParts)[0]}...`; startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); }
-                else { startBtn.innerText = '请选择部位'; startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); }
-            }
+            selectedParts.forEach(p => { const tag = document.createElement('span'); if(['有氧','拉伸'].includes(p)) { tag.className = 'status-tag status-ready'; tag.innerText = p; } else { const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60); let cfg = hrs < 24 ? {l:'刚练', c:'status-training'} : (hrs < 48 ? {l:'恢复', c:'status-recovering'} : {l:'就绪', c:'status-ready'}); tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}:${cfg.l}`; } statusBox.appendChild(tag); });
+            if (!startBtn.innerText.includes('完成')) { if (selectedParts.size > 0) { startBtn.innerText = `开始训练 ${Array.from(selectedParts).join('·')}`; startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); startBtn.style.pointerEvents = 'auto'; } else { startBtn.innerText = '请选择部位'; startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); startBtn.style.pointerEvents = 'none'; } }
         }
-        document.body.addEventListener('click', (e) => { const group = e.target.closest('[data-part]'); if (!group) return; const partName = group.getAttribute('data-part'); document.querySelectorAll(`[data-part="${partName}"]`).forEach(p => p.classList.toggle('is-active')); selectedParts.has(partName) ? selectedParts.delete(partName) : selectedParts.add(partName); updateStatusUI(); });
+        document.body.addEventListener('click', (e) => { const group = e.target.closest('[data-part]'); if (!group) return; if (window.navigator.vibrate) window.navigator.vibrate(15); const partName = group.getAttribute('data-part'); const pieces = document.querySelectorAll(`[data-part="${partName}"]`); const isActive = group.classList.contains('is-active'); pieces.forEach(p => p.classList.toggle('is-active')); isActive ? selectedParts.delete(partName) : selectedParts.add(partName); updateStatusUI(); });
         function toggleSpecial(mode) { const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch'); selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode); btn.classList.toggle('active'); updateStatusUI(); }
-        document.getElementById('weight-slider').oninput = function() { document.getElementById('weight-val').innerHTML = `${this.value} <small class="text-lg not-italic">kg</small>`; };
+        document.getElementById('weight-slider').oninput = function() { document.getElementById('weight-val').innerText = `${this.value} kg`; };
         document.getElementById('intensity-slider').oninput = function() { document.getElementById('intensity-val').innerText = intensityLabels[this.value]; };
-        function updateQuickRepeatUI() { const last = [...records].reverse().find(r => r.type === 'workout'); if(last) { document.getElementById('quick-repeat-container').classList.remove('hidden'); document.getElementById('last-color-dot').style.backgroundColor = last.color; document.getElementById('last-workout-info').innerText = last.parts; } }
-        function applyLastWorkout() { const last = [...records].reverse().find(r => r.type === 'workout'); if(!last) return; selectedParts.clear(); last.parts.split(' · ').forEach(p => { selectedParts.add(p); if(p==='有氧')document.getElementById('btn-cardio').classList.add('active'); else if(p==='拉伸')document.getElementById('btn-stretch').classList.add('active'); else document.querySelectorAll(`[data-part="${p}"]`).forEach(el => el.classList.add('is-active')); }); updateStatusUI(); }
-        function renderCalendar() { const now = new Date(); document.getElementById('calendar-title').innerText = `${now.getFullYear()}年 ${now.getMonth()+1}月`; const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); for(let i=1; i<=daysInMonth; i++) { const day = document.createElement('div'); day.className = `day-cell ${i===now.getDate() ? 'day-today' : ''}`; day.innerHTML = `<span>${i}</span>`; grid.appendChild(day); } }
-        function renderHistory() { const list = document.getElementById('history-list'); list.innerHTML = ''; [...records].reverse().forEach(r => { const card = document.createElement('div'); card.className = 'record-card glass-card p-5 mb-3'; card.style.borderLeftColor = r.color; card.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black text-indigo-400">${r.dateKey}</span><span class="font-black text-indigo-900">${r.duration}</span></div><p class="text-base font-black text-indigo-900">${r.parts}</p><p class="text-[10px] text-slate-500 font-bold">${r.weight} | ${r.intensity}</p>`; list.appendChild(card); }); }
+        document.getElementById('go-btn').onclick = function() {
+            if (this.innerText.includes('完成')) {
+                const now = new Date();
+                records.push({ id: Date.now(), type: 'workout', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: document.getElementById('timer-display').innerText, parts: Array.from(selectedParts).join(' · '), weight: document.getElementById('weight-val').innerText, intensity: document.getElementById('intensity-val').innerText, color: selectedColor, note: document.getElementById('note-field').value });
+                selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
+                saveAndRefetch(true); 
+            } else {
+                this.innerText = '完成训练 FINISH'; this.classList.replace('bg-indigo-600', 'bg-rose-500');
+                timer = setInterval(() => { seconds++; const h = Math.floor(seconds/3600).toString().padStart(2,'0'); const m = Math.floor((seconds%3600)/60).toString().padStart(2,'0'); const s = (seconds%60).toString().padStart(2,'0'); document.getElementById('timer-display').innerText = `${h}:${m}:${s}`; }, 1000);
+            }
+        };
+        function updateQuickRepeatUI() { const lastWorkout = [...records].reverse().find(r => r.type === 'workout'); const container = document.getElementById('quick-repeat-container'); if (lastWorkout) { container.classList.remove('hidden'); document.getElementById('last-color-dot').style.backgroundColor = lastWorkout.color; document.getElementById('last-workout-info').innerText = `${lastWorkout.parts} (${lastWorkout.weight})`; } }
+        function applyLastWorkout() {
+            const lastWorkout = [...records].reverse().find(r => r.type === 'workout'); if (!lastWorkout) return;
+            selectedParts.clear(); document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active')); document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            const parts = lastWorkout.parts.split(' · ');
+            parts.forEach(p => { selectedParts.add(p); if (p === '有氧') document.getElementById('btn-cardio').classList.add('active'); else if (p === '拉伸') document.getElementById('btn-stretch').classList.add('active'); else document.querySelectorAll(`[data-part="${p}"]`).forEach(el => el.classList.add('is-active')); });
+            document.getElementById('weight-slider').value = parseInt(lastWorkout.weight); document.getElementById('weight-val').innerText = lastWorkout.weight;
+            const colorDiv = document.querySelector(`[data-color="${lastWorkout.color}"]`); if (colorDiv) selectColor(colorDiv);
+            updateStatusUI();
+        }
+        function calculateStreak() { if (records.length === 0) return; const dates = [...new Set(records.map(r => r.dateKey))].sort((a,b) => new Date(b) - new Date(a)); document.getElementById('streak-count').innerText = dates.length; }
+        function renderCalendar() { const now = new Date(); document.getElementById('calendar-title').innerText = `${now.getFullYear()}年 ${now.getMonth()+1}月`; const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); for(let i=1; i<=daysInMonth; i++) { const dayStr = `${now.getFullYear()}-${now.getMonth()+1}-${i}`; const day = document.createElement('div'); day.className = `day-cell ${i===now.getDate() ? 'day-today' : ''}`; const dayWorkouts = records.filter(r => r.dateKey === dayStr); let dotsHtml = dayWorkouts.map(d => `<div class="workout-dot" style="background:${d.color}"></div>`).join(''); day.innerHTML = `<span>${i}</span><div class="flex flex-wrap justify-center">${dotsHtml}</div>`; grid.appendChild(day); } }
+        function renderHistory() { const list = document.getElementById('history-list'); list.innerHTML = ''; [...records].reverse().forEach(r => { const card = document.createElement('div'); card.className = 'record-card glass-card p-5 mb-3'; card.style.borderLeftColor = r.color || '#E2E8F0'; const d = r.dateKey.split('-'); card.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black text-indigo-400">${d[1]}/${d[2]} ${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div><p class="text-base font-black text-indigo-900">${r.parts}</p><p class="text-[10px] text-slate-500 font-bold">${r.weight} ${r.type==='workout' ? '| '+r.intensity : ''}</p>${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}<button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button><button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`; list.appendChild(card); }); }
+        function deleteRecord(id) { if(confirm('确定删除此记录？')) { records = records.filter(r => r.id !== id); localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderCalendar(); renderHistory(); updateQuickRepeatUI(); } }
         function renderSupps() { const container = document.getElementById('supp-list'); container.innerHTML = suppConfigs.map(s => `<div class="glass-card p-5 supp-card" id="supp-card-${s.id}" onclick="toggleSupp('${s.id}')"><div class="flex justify-between items-center"><div class="flex items-center gap-3"><span class="text-2xl">${s.icon}</span><span class="font-black text-indigo-950">${s.name}</span></div><span id="supp-val-${s.id}" class="text-sm font-black text-indigo-600">${s.def}${s.unit}</span></div><div class="mt-4 hidden" id="supp-ctrl-${s.id}" onclick="event.stopPropagation()"><input type="range" min="0" max="${s.max}" value="${s.def}" step="${s.id==='pre'?0.5:1}" class="w-full" oninput="document.getElementById('supp-val-${s.id}').innerText=this.value+'${s.unit}'"></div></div>`).join(''); }
         function toggleSupp(id) { selectedSupps.has(id) ? selectedSupps.delete(id) : selectedSupps.add(id); document.getElementById(`supp-card-${id}`).classList.toggle('selected'); document.getElementById(`supp-ctrl-${id}`).classList.toggle('hidden'); const btn = document.getElementById('supp-save-btn'); btn.innerText = selectedSupps.size ? `确认记录 ${selectedSupps.size} 项补剂` : '请选择补剂 (0)'; btn.className = `w-full py-5 rounded-3xl font-black text-lg shadow-xl transition-all ${selectedSupps.size ? 'bg-indigo-600 text-white' : 'bg-slate-400 text-white'}`; }
-        function saveSuppsBatch() { if (!selectedSupps.size) return; const now = new Date(); records.push({ id: Date.now(), type: 'supp', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: '补充', parts: `💊 补剂组合`, weight: '已记录', intensity: '-', color: '#6366F1' }); saveAndRefetch(false); }
+        function saveSuppsBatch() { if (!selectedSupps.size) return; const now = new Date(); const details = Array.from(selectedSupps).map(id => { const conf = suppConfigs.find(c => c.id === id); return `${conf.name}: ${document.getElementById(`supp-val-${id}`).innerText}`; }).join(' | '); records.push({ id: Date.now(), type: 'supp', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: '补充完成', parts: `💊 补剂组合`, weight: details, intensity: '健康摄入', color: '#6366F1' }); saveAndRefetch(false); }
         function fireCelebration() { const end = Date.now() + 2000; (function frame() { confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } }); confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } }); if (Date.now() < end) requestAnimationFrame(frame); }()); }
 
         init();
