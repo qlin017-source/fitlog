@@ -2,60 +2,46 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/neon/512/experimental-flash-on-neon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>FitLog</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { 
-            /* 背景加深为淡靛蓝，增强卡片悬浮感 */
-            --bg-main: #EDF2FF;
-            --brand-main: #6366F1; 
-            --rested: #E2E8F0; 
-            --recovering: #FCD34D; 
-            --fatigued: #60A5FA; 
-            --active: #FB7185;
-        }
-        body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; }
-        
-        /* 增强卡片对比度和阴影 */
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255,255,255,1); 
-            border-radius: 32px; 
-            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.1); 
-        }
-        
+        :root { --bg-main: #EDF2FF; --brand-main: #6366F1; --rested: #E2E8F0; --recovering: #FCD34D; --fatigued: #60A5FA; --active: #FB7185; }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+        input, textarea { -webkit-user-select: auto; user-select: auto; }
+        body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; padding-top: env(safe-area-inset-top); margin: 0; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,1); border-radius: 32px; box-shadow: 0 15px 35px rgba(79, 70, 229, 0.08); }
         .muscle-slice { stroke: #FFF; stroke-width: 1.2; transition: all 0.3s ease; cursor: pointer; }
         .no-click { cursor: default; pointer-events: none; opacity: 0.6; } 
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
         .is-active { fill: var(--active) !important; stroke: #000; stroke-width: 1.5; filter: drop-shadow(0 0 8px rgba(251, 113, 133, 0.4)); }
-
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
         .status-ready { background: #F1F5F9; color: #64748B; }
         .status-recovering { background: #FEF3C7; color: #92400E; }
         .status-training { background: #DBEAFE; color: #1E40AF; }
-
-        .mode-btn { padding: 12px 24px; border-radius: 16px; font-weight: 900; font-size: 14px; transition: all 0.2s; border: 2px solid #EEF2FF; background: #FFF; color: #64748B; }
+        .mode-btn { padding: 12px 24px; border-radius: 16px; font-weight: 900; font-size: 14px; border: 2px solid #EEF2FF; background: #FFF; color: #64748B; }
         .mode-btn.active { background: var(--brand-main); color: white; border-color: var(--brand-main); }
-
         input[type=range] { -webkit-appearance: none; background: #E0E7FF; height: 8px; border-radius: 4px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%; background: var(--brand-main); border: 3px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--brand-main); border: 3px solid #FFF; }
+        .supp-item { padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; border: 1.5px solid #EEF2FF; background: white; color: #64748B; text-align: center; }
+        .supp-item.active { background: #EEF2FF; border-color: var(--brand-main); color: var(--brand-main); }
         .nav-active { color: var(--brand-main) !important; font-weight: 900; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; border: 1px solid rgba(0,0,0,0.02); }
-        .day-today { background: var(--brand-main) !important; color: white !important; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; position: relative; }
+        .day-today { background: var(--brand-main) !important; color: white !important; }
         .workout-dot { width: 4px; height: 4px; border-radius: 50%; margin: 1px; }
         .record-card { border-left: 8px solid transparent; }
     </style>
 </head>
 <body>
-
     <div id="workout-view" class="px-6 pb-40 text-center">
-        <header class="pt-16 pb-6">
-            <h1 class="text-4xl font-black tracking-tighter mb-4 italic">FITLOG<span class="text-rose-500">.</span></h1>
+        <header class="pt-12 pb-6">
+            <h1 class="text-4xl font-black tracking-tighter mb-4 italic text-indigo-950">FITLOG<span class="text-rose-500">.</span></h1>
             <div class="glass-card py-6 px-4">
                 <p id="part-summary" class="text-2xl font-black text-indigo-600">选择部位开始训练</p>
                 <div id="recovery-status" class="flex flex-wrap justify-center gap-1 mt-3 hidden"></div>
@@ -63,94 +49,100 @@
         </header>
 
         <main class="max-w-md mx-auto space-y-6">
-            <section class="glass-card p-8 flex flex-col items-center gap-8">
+            <section class="glass-card p-8 flex flex-col items-center gap-8 shadow-sm">
                 <div class="flex justify-around items-start w-full">
                     <div class="flex-1 flex flex-col items-center">
-                        <span class="text-[10px] font-black text-slate-300 mb-2 uppercase tracking-widest">Front</span>
+                        <span class="text-[10px] font-black text-slate-300 mb-2 uppercase">Front</span>
                         <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" /> 
                             <circle data-part="肩膀" cx="31" cy="29" r="7" class="muscle-slice heat-rested" />
                             <circle data-part="肩膀" cx="69" cy="29" r="7" class="muscle-slice heat-rested" />
                             <path data-part="胸部" d="M36 32 a14 14 0 0 1 28 0 v4 h-28 z" class="muscle-slice heat-rested" />
-                            <g data-part="核心">
-                                <rect x="41" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                                <rect x="51" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                                <rect x="41" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                                <rect x="51" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                                <rect x="41" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                                <rect x="51" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                            </g>
-                            <rect data-part="大臂" x="18" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" />
-                            <rect data-part="大臂" x="73" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" />
-                            <rect data-part="小臂" x="15" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" />
-                            <rect data-part="小臂" x="77" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" />
-                            <rect data-part="大腿" x="38" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" />
-                            <rect data-part="大腿" x="51" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" />
-                            <rect data-part="小腿" x="39" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" />
-                            <rect data-part="小腿" x="52" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" />
+                            <g data-part="核心"><rect x="41" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="41" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="41" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" /></g>
+                            <rect data-part="大臂" x="18" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" /><rect data-part="大臂" x="73" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" />
+                            <rect data-part="小臂" x="15" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" /><rect data-part="小臂" x="77" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" />
+                            <rect data-part="大腿" x="38" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" /><rect data-part="大腿" x="51" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" />
+                            <rect data-part="小腿" x="39" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" /><rect data-part="小腿" x="52" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" />
                         </svg>
                     </div>
                     <div class="flex-1 flex flex-col items-center border-l border-indigo-50">
-                        <span class="text-[10px] font-black text-slate-300 mb-2 uppercase tracking-widest">Back</span>
+                        <span class="text-[10px] font-black text-slate-300 mb-2 uppercase">Back</span>
                         <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" />
                             <path data-part="背部" d="M28 28 q22 -6 44 0 l-4 16 h-36 z" class="muscle-slice heat-rested" />
                             <g data-part="臀部"><circle cx="43" cy="64" r="11" class="muscle-slice heat-rested" /><circle cx="57" cy="64" r="11" class="muscle-slice heat-rested" /></g>
-                            <rect data-part="大腿" x="40" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" />
-                            <rect data-part="大腿" x="50" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" />
-                            <rect data-part="小腿" x="41" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" />
-                            <rect data-part="小腿" x="51" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" />
+                            <rect data-part="大腿" x="40" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" /><rect data-part="大腿" x="50" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" />
+                            <rect data-part="小腿" x="41" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" /><rect data-part="小腿" x="51" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" />
                         </svg>
                     </div>
                 </div>
-
                 <div class="flex gap-4 w-full">
-                    <button id="btn-cardio" onclick="toggleSpecial('有氧')" class="mode-btn flex-1">🏃 有氧</button>
-                    <button id="btn-stretch" onclick="toggleSpecial('拉伸')" class="mode-btn flex-1">🧘 拉伸</button>
+                    <button id="btn-cardio" onclick="toggleSpecial('有氧')" class="mode-btn flex-1 shadow-sm">🏃 有氧</button>
+                    <button id="btn-stretch" onclick="toggleSpecial('拉伸')" class="mode-btn flex-1 shadow-sm">🧘 拉伸</button>
                 </div>
-
-                <button id="go-btn" class="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">开始训练 START</button>
+                <button id="go-btn" class="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black text-xl shadow-2xl active:scale-95 transition-all">开始训练 START</button>
             </section>
 
-            <section class="glass-card p-8 space-y-8 text-left">
+            <section class="glass-card p-8 space-y-8 text-left shadow-sm">
                 <div class="flex justify-between items-start">
-                    <div><p class="text-[10px] font-black text-slate-400 uppercase">计时 Duration</p><h3 class="text-4xl font-black mt-1 tabular-nums" id="timer-display">00:00:00</h3></div>
-                    <div class="text-right">
+                    <div><p class="text-[10px] font-black text-slate-400">计时 DURATION</p><h3 class="text-4xl font-black mt-1 tabular-nums" id="timer-display">00:00:00</h3></div>
+                    <div class="text-right flex-1 pl-4">
                         <p class="text-[10px] font-black text-slate-400 uppercase mb-2">标记 Color</p>
                         <div class="grid grid-cols-3 gap-2" id="color-palette">
-                            <div class="w-6 h-6 rounded-full bg-indigo-950 cursor-pointer ring-2 ring-transparent ring-offset-2" data-color="#1E1B4B" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-white border cursor-pointer ring-2 ring-transparent ring-offset-2" data-color="#FFFFFF" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-rose-500 cursor-pointer ring-2 ring-transparent ring-offset-2" data-color="#F43F5E" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-emerald-500 cursor-pointer ring-2 ring-transparent ring-offset-2" data-color="#10B981" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-sky-500 cursor-pointer ring-2 ring-transparent ring-offset-2" data-color="#0EA5E9" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-orange-400 cursor-pointer ring-2 ring-transparent ring-offset-2" data-color="#FB923C" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-indigo-950 ring-2 ring-indigo-400" data-color="#1E1B4B" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-white border ring-2 ring-transparent" data-color="#FFFFFF" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-rose-500 ring-2 ring-transparent" data-color="#F43F5E" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-emerald-500 ring-2 ring-transparent" data-color="#10B981" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-sky-500 ring-2 ring-transparent" data-color="#0EA5E9" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-orange-400 ring-2 ring-transparent" data-color="#FB923C" onclick="selectColor(this)"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="space-y-4">
                     <div class="flex justify-between items-end"><p class="text-sm font-black text-indigo-900">负重重量 Weight</p><span id="weight-val" class="text-xl font-black text-rose-500">2 kg</span></div>
                     <input type="range" id="weight-slider" min="0" max="100" step="2" value="0" class="w-full">
                 </div>
-
                 <div class="space-y-4 pt-4 border-t border-slate-50">
                     <div class="flex justify-between items-end"><p class="text-sm font-black text-indigo-900">强度 Intensity</p><span id="intensity-val" class="text-sm font-black text-indigo-500">中等 (5)</span></div>
                     <input type="range" id="intensity-slider" min="1" max="10" value="5" class="w-full">
                 </div>
-
                 <div class="space-y-2 pt-4 border-t border-slate-50">
                     <p class="text-sm font-black text-indigo-900">备注 Notes</p>
-                    <textarea id="note-field" rows="2" placeholder="输入动作、组数或心情..." class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-100 outline-none"></textarea>
+                    <textarea id="note-field" rows="2" placeholder="动作细节或心情..." class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-100 outline-none transition-all"></textarea>
+                </div>
+                <div class="pt-4 border-t border-slate-100">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" id="supp-toggle" class="w-5 h-5 rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500" onchange="toggleSuppCard()">
+                        <span class="text-sm font-black text-slate-500 uppercase tracking-widest">补剂追踪 Supplement</span>
+                    </label>
+                    <div id="supp-card" class="hidden mt-4 space-y-6 bg-indigo-50/50 p-6 rounded-3xl animate-fade-in transition-all">
+                        <div class="grid grid-cols-2 gap-2" id="supp-list">
+                            <div class="supp-item" onclick="selectSuppItem(this)">蛋白粉</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">肌酸</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">氮泵</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">BCAA</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">谷氨酰胺</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">促睾</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">左旋肉碱</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">鱼油/维矿</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">ZMA</div>
+                            <div class="supp-item" onclick="selectSuppItem(this)">酪蛋白</div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-end"><p class="text-[10px] font-black text-indigo-400">剂量 Dosage</p><span id="supp-dosage-val" class="text-sm font-black text-indigo-600">1 份</span></div>
+                            <input type="range" id="supp-slider" min="1" max="5" value="1" class="w-full h-1.5">
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
     <div id="calendar-view" class="px-6 pt-16 pb-40 hidden">
-        <header class="text-center mb-8"><h2 class="text-2xl font-black text-indigo-900">记录</h2></header>
+        <header class="text-center mb-8"><h2 class="text-2xl font-black text-indigo-900">记录记录 HISTORY</h2></header>
         <div class="max-w-md mx-auto space-y-8">
-            <div class="glass-card p-6">
-                <p class="text-center font-black mb-4 text-xs text-slate-400">2026年 3月</p>
+            <div class="glass-card p-6 shadow-sm">
+                <p class="text-center font-black mb-4 text-xs text-slate-400" id="calendar-title">2026年 3月</p>
                 <div class="calendar-grid" id="calendar-days"></div>
             </div>
             <div id="history-list" class="space-y-4 pb-10"></div>
@@ -163,30 +155,21 @@
     </nav>
 
     <script>
-        let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v92')) || {};
-        let records = JSON.parse(localStorage.getItem('fitlog_logs_v92')) || [];
+        let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v93')) || {};
+        let records = JSON.parse(localStorage.getItem('fitlog_logs_v93')) || [];
         let selectedParts = new Set();
+        let selectedSupps = new Set();
         let selectedColor = '#1E1B4B';
         let timer, seconds = 0;
 
         function init() { renderCalendar(); updateHeatmap(); renderHistory(); }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-days'); grid.innerHTML = '';
-            for(let i=1; i<=31; i++) {
-                const day = document.createElement('div');
-                day.className = `day-cell ${i===12 ? 'day-today' : ''}`;
-                const hasWorkouts = records.filter(r => r.day === i);
-                let dotsHtml = hasWorkouts.map(d => `<div class="workout-dot" style="background:${d.color}"></div>`).join('');
-                day.innerHTML = `<span>${i}</span><div class="flex flex-wrap justify-center">${dotsHtml}</div>`;
-                grid.appendChild(day);
-            }
-        }
+        function toggleSuppCard() { document.getElementById('supp-card').classList.toggle('hidden', !document.getElementById('supp-toggle').checked); }
+        function selectSuppItem(el) { el.classList.toggle('active'); if(el.classList.contains('active')) selectedSupps.add(el.innerText); else selectedSupps.delete(el.innerText); }
+        document.getElementById('supp-slider').oninput = function() { document.getElementById('supp-dosage-val').innerText = `${this.value} 份`; };
 
         function updateHeatmap() {
             document.querySelectorAll('.muscle-slice').forEach(slice => {
-                const part = slice.getAttribute('data-part');
-                if (!part) return;
+                const part = slice.getAttribute('data-part'); if (!part) return;
                 const hrs = (Date.now() - (recoveryData[part] || 0)) / (1000 * 60 * 60);
                 slice.classList.remove('heat-rested', 'heat-recovering', 'heat-fatigued');
                 if (hrs < 24) slice.classList.add('heat-fatigued');
@@ -202,9 +185,8 @@
                 statusBox.classList.remove('hidden'); statusBox.innerHTML = '';
                 selectedParts.forEach(p => {
                     const tag = document.createElement('span');
-                    if(['有氧','拉伸'].includes(p)) {
-                        tag.className = 'status-tag status-ready'; tag.innerText = p;
-                    } else {
+                    if(['有氧','拉伸'].includes(p)) { tag.className = 'status-tag status-ready'; tag.innerText = p; }
+                    else {
                         const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60);
                         let cfg = hrs < 24 ? {l:'刚练完', c:'status-training'} : (hrs < 48 ? {l:'恢复中', c:'status-recovering'} : {l:'已就绪', c:'status-ready'});
                         tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}: ${cfg.l}`;
@@ -218,8 +200,9 @@
         document.body.addEventListener('click', (e) => {
             const group = e.target.closest('[data-part]'); if (!group) return;
             const partName = group.getAttribute('data-part');
-            const isActive = selectedParts.has(partName);
-            document.querySelectorAll(`[data-part="${partName}"]`).forEach(p => {
+            const pieces = document.querySelectorAll(`[data-part="${partName}"]`);
+            const isActive = pieces[0].classList.contains('is-active');
+            pieces.forEach(p => {
                 if(p.tagName === 'g') p.querySelectorAll('.muscle-slice').forEach(s => s.classList.toggle('is-active', !isActive));
                 else p.classList.toggle('is-active', !isActive);
             });
@@ -228,40 +211,40 @@
         });
 
         function toggleSpecial(mode) {
-            const btn = mode === '有氧' ? document.getElementById('btn-cardio') : document.getElementById('btn-stretch');
+            const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch');
             selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode);
-            btn.classList.toggle('active');
-            updateStatusUI();
+            btn.classList.toggle('active'); updateStatusUI();
         }
 
-        document.getElementById('weight-slider').oninput = function() {
-            document.getElementById('weight-val').innerText = `${this.value == 0 ? 2 : this.value} kg`;
-        };
-
-        document.getElementById('intensity-slider').oninput = function() {
-            const labels = ["","恢复","极轻","较轻","稍强","中等","高强","艰苦","极累","极限","拼命"];
-            document.getElementById('intensity-val').innerText = `${labels[this.value]} (${this.value})`;
-        };
+        document.getElementById('weight-slider').oninput = function() { document.getElementById('weight-val').innerText = `${this.value == 0 ? 2 : this.value} kg`; };
 
         const startBtn = document.getElementById('go-btn');
         startBtn.onclick = () => {
             if (startBtn.innerText.includes('完成')) {
                 const now = new Date();
+                let finalNote = document.getElementById('note-field').value;
+                if(document.getElementById('supp-toggle').checked && selectedSupps.size > 0) {
+                    finalNote += ` [补剂: ${Array.from(selectedSupps).join(',')} | ${document.getElementById('supp-slider').value}份]`;
+                }
                 const record = {
-                    timestamp: Date.now(), day: 12,
+                    timestamp: Date.now(), 
+                    dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`,
+                    day: now.getDate(),
                     time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'),
                     duration: document.getElementById('timer-display').innerText,
-                    parts: Array.from(selectedParts).join(' · ') || '综合',
+                    parts: Array.from(selectedParts).join(' · ') || '全能训练',
                     weight: document.getElementById('weight-val').innerText,
-                    intensity: document.getElementById('intensity-val').innerText.split(' ')[0],
-                    color: selectedColor,
-                    note: document.getElementById('note-field').value
+                    intensity: `${["","恢复","极轻","较轻","稍强","中等","高强","艰苦","极累","极限","拼命"][document.getElementById('intensity-slider').value]} (${document.getElementById('intensity-slider').value})`,
+                    color: selectedColor, note: finalNote
                 };
                 records.push(record);
                 selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
-                localStorage.setItem('fitlog_logs_v92', JSON.stringify(records));
-                localStorage.setItem('fitlog_rec_v92', JSON.stringify(recoveryData));
-                location.reload();
+                localStorage.setItem('fitlog_logs_v93', JSON.stringify(records));
+                localStorage.setItem('fitlog_rec_v93', JSON.stringify(recoveryData));
+                clearInterval(timer); seconds = 0; document.getElementById('timer-display').innerText = '00:00:00';
+                document.getElementById('note-field').value = '';
+                startBtn.innerText = '开始训练 START'; startBtn.classList.replace('bg-rose-500', 'bg-indigo-600');
+                init(); showView('calendar');
             } else {
                 startBtn.innerText = '完成训练 FINISH'; startBtn.classList.replace('bg-indigo-600', 'bg-rose-500');
                 timer = setInterval(() => {
@@ -286,18 +269,29 @@
             document.getElementById('nav-calendar').classList.toggle('nav-active', view === 'calendar');
         }
 
+        function renderCalendar() {
+            const now = new Date();
+            document.getElementById('calendar-title').innerText = `${now.getFullYear()}年 ${now.getMonth()+1}月`;
+            const grid = document.getElementById('calendar-days'); grid.innerHTML = '';
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            for(let i=1; i<=daysInMonth; i++) {
+                const day = document.createElement('div');
+                day.className = `day-cell ${i===now.getDate() ? 'day-today' : ''}`;
+                const dateStr = `${now.getFullYear()}-${now.getMonth()+1}-${i}`;
+                const dayWorkouts = records.filter(r => r.dateKey === dateStr || (r.day === i && !r.dateKey));
+                let dotsHtml = dayWorkouts.map(d => `<div class="workout-dot" style="background:${d.color}"></div>`).join('');
+                day.innerHTML = `<span>${i}</span><div class="flex flex-wrap justify-center">${dotsHtml}</div>`;
+                grid.appendChild(day);
+            }
+        }
+
         function renderHistory() {
             const list = document.getElementById('history-list'); list.innerHTML = '';
             [...records].reverse().forEach(r => {
                 const card = document.createElement('div');
                 card.className = 'record-card glass-card p-6 shadow-sm mb-4';
                 card.style.borderLeftColor = r.color === '#FFFFFF' ? '#E2E8F0' : r.color;
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-2"><span class="text-[10px] font-black text-indigo-400">${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div>
-                    <p class="text-lg font-black text-indigo-900">${r.parts}</p>
-                    <p class="text-xs text-slate-500 font-bold">${r.weight} | 强度:${r.intensity}</p>
-                    ${r.note ? `<div class="mt-2 pt-2 border-t border-slate-50 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}
-                `;
+                card.innerHTML = `<div class="flex justify-between items-center mb-2"><span class="text-[10px] font-black text-indigo-400">${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div><p class="text-lg font-black text-indigo-900">${r.parts}</p><p class="text-xs text-slate-500 font-bold">${r.weight} | ${r.intensity}</p>${r.note ? `<div class="mt-2 pt-2 border-t border-slate-50 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}`;
                 list.appendChild(card);
             });
         }
