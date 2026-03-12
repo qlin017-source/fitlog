@@ -233,6 +233,13 @@
             pieces.forEach(p => { if (isActive) p.classList.remove('is-active'); else p.classList.add('is-active'); });
             if (isActive) selectedParts.delete(partName); else selectedParts.add(partName);
             updateStatusUI();
+            const group = e.target.closest('[data-part]'); 
+            if (!group) return;
+
+            // 📳 添加短促震动 (15毫秒)，模拟物理按键反馈
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate(15);
+            }
         });
 
         function toggleSpecial(mode) { 
@@ -253,6 +260,9 @@
                 localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); 
                 localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
                 location.reload(); 
+                if (window.navigator.vibrate) {
+                window.navigator.vibrate([40, 30, 40]);
+            }
             } else {
                 this.innerText = '完成训练 FINISH'; this.classList.replace('bg-indigo-600', 'bg-rose-500');
                 timer = setInterval(() => { seconds++; const h = Math.floor(seconds/3600).toString().padStart(2,'0'); const m = Math.floor((seconds%3600)/60).toString().padStart(2,'0'); const s = (seconds%60).toString().padStart(2,'0'); document.getElementById('timer-display').innerText = `${h}:${m}:${s}`; }, 1000);
