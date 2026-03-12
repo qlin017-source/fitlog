@@ -9,13 +9,27 @@
     <title>FitLog⚡️</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --bg-main: #EDF2FF; --brand-main: #6366F1; --rested: #E2E8F0; --recovering: #FCD34D; --fatigued: #60A5FA; --active: #FB7185; }
-        * { -webkit-touch-callout: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
-        input, textarea { -webkit-user-select: auto; user-select: auto; }
-        body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; padding-top: env(safe-area-inset-top); margin: 0; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,1); border-radius: 32px; box-shadow: 0 15px 35px rgba(79, 70, 229, 0.08); }
-        .muscle-slice { stroke: #FFF; stroke-width: 1.2; transition: all 0.3s ease; cursor: pointer; }
-        .no-click { cursor: default; pointer-events: none; opacity: 0.6; } 
+     :root { 
+            --bg-main: #EDF2FF; 
+            --brand-main: #6366F1; 
+            
+            /* 状态颜色定义 */
+            --rested: #F1F5F9;      /* 已就绪：淡淡的灰蓝 (Tailwind slate-100) */
+            --recovering: #FED7AA;  /* 恢复中：透亮的浅橙 (Tailwind orange-200) */
+            --fatigued: #FECACA;    /* 刚练完：直观的淡红 (Tailwind red-200) */
+            
+            --active: #FB7185; 
+        }
+
+        /* 统一描边和过渡动画 */
+        .muscle-slice { 
+            stroke: #FFF; 
+            stroke-width: 1.2; 
+            transition: all 0.4s ease-in-out; 
+            cursor: pointer; 
+        }
+        
+        /* 填充对应的颜色变量 */
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
