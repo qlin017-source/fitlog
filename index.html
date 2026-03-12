@@ -52,10 +52,7 @@
     <div id="workout-view" class="px-6 pb-40 text-center">
         <header class="pt-12 pb-6">
             <h1 class="text-4xl font-black tracking-tighter mb-4 italic text-indigo-950">FITLOG<span class="text-rose-500">.</span></h1>
-            <div class="glass-card py-6 px-4">
-                <p id="part-summary" class="text-2xl font-black text-indigo-600">选择部位开始训练</p>
-                <div id="recovery-status" class="flex flex-wrap justify-center gap-1 mt-3 hidden"></div>
-            </div>
+    
         </header>
 
         <main class="max-w-md mx-auto space-y-6">
@@ -75,7 +72,7 @@
                             <rect data-part="小腿" x="39" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" /><rect data-part="小腿" x="52" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" />
                         </svg>
                     </div>
-                    <div class="flex-1 flex flex-col items-center border-l border-indigo-50">
+                    <div class="flex-1 flex flex-col items-center">
                         <span class="text-[10px] font-black text-slate-300 mb-2 uppercase">Back</span>
                         <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" />
@@ -149,7 +146,12 @@
         let selectedColor = '#1E1B4B';
         let timer, seconds = 0;
 
-        function init() { renderCalendar(); updateHeatmap(); renderHistory(); }
+        function init() { renderCalendar(); updateHeatmap(); renderHistory(); 
+                        const startBtn = document.getElementById('go-btn');
+    startBtn.innerText = '请选择部位';
+    startBtn.classList.add('bg-slate-400'); // 初始设为灰色
+    startBtn.style.pointerEvents = 'none';  // 初始设为不可点击
+}
 
         function selectColor(el) {
     // 移除所有圆点的选中状态
@@ -174,24 +176,25 @@
             });
         }
 
-        function updateStatusUI() {
-            const statusBox = document.getElementById('recovery-status');
-            if (!selectedParts.size) { statusBox.classList.add('hidden'); document.getElementById('part-summary').innerText = '选择部位开始训练'; }
-            else {
-                statusBox.classList.remove('hidden'); statusBox.innerHTML = '';
-                selectedParts.forEach(p => {
-                    const tag = document.createElement('span');
-                    if(['有氧','拉伸'].includes(p)) { tag.className = 'status-tag status-ready'; tag.innerText = p; }
-                    else {
-                        const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60);
-                        let cfg = hrs < 24 ? {l:'刚练完', c:'status-training'} : (hrs < 48 ? {l:'恢复中', c:'status-recovering'} : {l:'已就绪', c:'status-ready'});
-                        tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}: ${cfg.l}`;
-                    }
-                    statusBox.appendChild(tag);
-                });
-                document.getElementById('part-summary').innerText = Array.from(selectedParts).join(' · ');
-            }
+function updateStatusUI() {
+    const startBtn = document.getElementById('go-btn');
+    if (!selectedParts.size) {
+        // 没选部位时按钮的状态
+        if (!startBtn.innerText.includes('完成')) {
+            startBtn.innerText = '请选择部位';
+            startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); // 灰掉按钮
+            startBtn.style.pointerEvents = 'none'; // 没选不能点
         }
+    } else {
+        // 选了部位后按钮的状态
+        if (!startBtn.innerText.includes('完成')) {
+            const partsText = Array.from(selectedParts).join(' · ');
+            startBtn.innerText = `开始训练: ${partsText}`;
+            startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); // 变回紫色
+            startBtn.style.pointerEvents = 'auto'; // 恢复点击
+        }
+    }
+}
 
         document.body.addEventListener('click', (e) => {
             const group = e.target.closest('[data-part]'); if (!group) return;
