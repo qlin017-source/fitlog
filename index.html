@@ -141,7 +141,7 @@
             const statusBox = document.getElementById('recovery-status'); const startBtn = document.getElementById('go-btn'); statusBox.innerHTML = '';
             if (selectedParts.size > 0) {
                 selectedParts.forEach(p => { const tag = document.createElement('span'); if(['有氧','拉伸'].includes(p)) { tag.className = 'status-tag status-ready'; tag.innerText = p; } else { const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60); let cfg = hrs < 24 ? {l:'刚练', c:'status-training'} : (hrs < 48 ? {l:'恢复', c:'status-recovering'} : {l:'就绪', c:'status-ready'}); tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}:${cfg.l}`; } statusBox.appendChild(tag); });
-                if (!startBtn.innerText.includes('FINISH')) { startBtn.innerText = `开始 ${Array.from(selectedParts).join('·')}`; startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); startBtn.style.pointerEvents = 'auto'; }
+                if (!startBtn.innerText.includes('FINISH')) { startBtn.innerText = `开始训练 ${Array.from(selectedParts).join('·')}`; startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); startBtn.style.pointerEvents = 'auto'; }
             } else { if (!startBtn.innerText.includes('FINISH')) { startBtn.innerText = '请选择部位'; startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); startBtn.style.pointerEvents = 'none'; } }
         }
 
