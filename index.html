@@ -35,7 +35,8 @@
         .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; position: relative; }
         .day-today { background: var(--brand-main) !important; color: white !important; }
         .workout-dot { width: 4px; height: 4px; border-radius: 50%; margin: 1px; }
-        .record-card { border-left: 8px solid transparent; }
+        .record-card { border-left: 8px solid transparent; position: relative; }
+        .delete-btn { position: absolute; top: 12px; right: 12px; color: #CBD5E1; font-size: 20px; padding: 4px; }
     </style>
 </head>
 <body>
@@ -110,30 +111,6 @@
                     <p class="text-sm font-black text-indigo-900">备注 Notes</p>
                     <textarea id="note-field" rows="2" placeholder="动作细节或心情..." class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-100 outline-none transition-all"></textarea>
                 </div>
-                <div class="pt-4 border-t border-slate-100">
-                    <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" id="supp-toggle" class="w-5 h-5 rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500" onchange="toggleSuppCard()">
-                        <span class="text-sm font-black text-slate-500 uppercase tracking-widest">补剂追踪 Supplement</span>
-                    </label>
-                    <div id="supp-card" class="hidden mt-4 space-y-6 bg-indigo-50/50 p-6 rounded-3xl animate-fade-in transition-all">
-                        <div class="grid grid-cols-2 gap-2" id="supp-list">
-                            <div class="supp-item" onclick="selectSuppItem(this)">蛋白粉</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">肌酸</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">氮泵</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">BCAA</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">谷氨酰胺</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">促睾</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">左旋肉碱</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">鱼油/维矿</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">ZMA</div>
-                            <div class="supp-item" onclick="selectSuppItem(this)">酪蛋白</div>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-end"><p class="text-[10px] font-black text-indigo-400">剂量 Dosage</p><span id="supp-dosage-val" class="text-sm font-black text-indigo-600">1 份</span></div>
-                            <input type="range" id="supp-slider" min="1" max="5" value="1" class="w-full h-1.5">
-                        </div>
-                    </div>
-                </div>
             </section>
         </main>
     </div>
@@ -158,14 +135,16 @@
         let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v93')) || {};
         let records = JSON.parse(localStorage.getItem('fitlog_logs_v93')) || [];
         let selectedParts = new Set();
-        let selectedSupps = new Set();
         let selectedColor = '#1E1B4B';
         let timer, seconds = 0;
 
         function init() { renderCalendar(); updateHeatmap(); renderHistory(); }
-        function toggleSuppCard() { document.getElementById('supp-card').classList.toggle('hidden', !document.getElementById('supp-toggle').checked); }
-        function selectSuppItem(el) { el.classList.toggle('active'); if(el.classList.contains('active')) selectedSupps.add(el.innerText); else selectedSupps.delete(el.innerText); }
-        document.getElementById('supp-slider').oninput = function() { document.getElementById('supp-dosage-val').innerText = `${this.value} 份`; };
+
+        function selectColor(el) {
+            document.querySelectorAll('#color-palette div').forEach(d => d.classList.remove('ring-indigo-400','ring-2'));
+            el.classList.add('ring-indigo-400','ring-2'); 
+            selectedColor = el.getAttribute('data-color'); // 修复：确保变量被赋值
+        }
 
         function updateHeatmap() {
             document.querySelectorAll('.muscle-slice').forEach(slice => {
@@ -222,11 +201,8 @@
         startBtn.onclick = () => {
             if (startBtn.innerText.includes('完成')) {
                 const now = new Date();
-                let finalNote = document.getElementById('note-field').value;
-                if(document.getElementById('supp-toggle').checked && selectedSupps.size > 0) {
-                    finalNote += ` [补剂: ${Array.from(selectedSupps).join(',')} | ${document.getElementById('supp-slider').value}份]`;
-                }
                 const record = {
+                    id: Date.now(), // 增加唯一ID用于删除
                     timestamp: Date.now(), 
                     dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`,
                     day: now.getDate(),
@@ -235,12 +211,12 @@
                     parts: Array.from(selectedParts).join(' · ') || '全能训练',
                     weight: document.getElementById('weight-val').innerText,
                     intensity: `${["","恢复","极轻","较轻","稍强","中等","高强","艰苦","极累","极限","拼命"][document.getElementById('intensity-slider').value]} (${document.getElementById('intensity-slider').value})`,
-                    color: selectedColor, note: finalNote
+                    color: selectedColor,
+                    note: document.getElementById('note-field').value
                 };
                 records.push(record);
                 selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
-                localStorage.setItem('fitlog_logs_v93', JSON.stringify(records));
-                localStorage.setItem('fitlog_rec_v93', JSON.stringify(recoveryData));
+                saveData();
                 clearInterval(timer); seconds = 0; document.getElementById('timer-display').innerText = '00:00:00';
                 document.getElementById('note-field').value = '';
                 startBtn.innerText = '开始训练 START'; startBtn.classList.replace('bg-rose-500', 'bg-indigo-600');
@@ -257,9 +233,17 @@
             }
         };
 
-        function selectColor(el) {
-            document.querySelectorAll('#color-palette div').forEach(d => d.classList.remove('ring-indigo-400','ring-2'));
-            el.classList.add('ring-indigo-400','ring-2'); selectedColor = el.getAttribute('data-color');
+        function saveData() {
+            localStorage.setItem('fitlog_logs_v93', JSON.stringify(records));
+            localStorage.setItem('fitlog_rec_v93', JSON.stringify(recoveryData));
+        }
+
+        function deleteRecord(id) {
+            if(confirm('确定要删除这条记录吗？')) {
+                records = records.filter(r => r.id !== id);
+                saveData();
+                init();
+            }
         }
 
         function showView(view) {
@@ -291,7 +275,16 @@
                 const card = document.createElement('div');
                 card.className = 'record-card glass-card p-6 shadow-sm mb-4';
                 card.style.borderLeftColor = r.color === '#FFFFFF' ? '#E2E8F0' : r.color;
-                card.innerHTML = `<div class="flex justify-between items-center mb-2"><span class="text-[10px] font-black text-indigo-400">${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div><p class="text-lg font-black text-indigo-900">${r.parts}</p><p class="text-xs text-slate-500 font-bold">${r.weight} | ${r.intensity}</p>${r.note ? `<div class="mt-2 pt-2 border-t border-slate-50 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}`;
+                card.innerHTML = `
+                    <button onclick="deleteRecord(${r.id})" class="delete-btn">×</button>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-black text-indigo-400">${r.time}</span>
+                        <span class="font-black text-indigo-900">${r.duration}</span>
+                    </div>
+                    <p class="text-lg font-black text-indigo-900">${r.parts}</p>
+                    <p class="text-xs text-slate-500 font-bold">${r.weight} | ${r.intensity}</p>
+                    ${r.note ? `<div class="mt-2 pt-2 border-t border-slate-50 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}
+                `;
                 list.appendChild(card);
             });
         }
