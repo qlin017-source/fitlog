@@ -15,48 +15,40 @@
         input, textarea { -webkit-user-select: auto; user-select: auto; }
         body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; padding-top: env(safe-area-inset-top); margin: 0; overflow-x: hidden; }
         .glass-card { background: #FFFFFF; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border: 1px solid rgba(255, 255, 255, 1); }
-        
-        /* 肌肉块基础样式 */
-        .muscle-slice { stroke: rgba(0,0,0,0.08); stroke-width: 0.8; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; transform-box: fill-box; transform-origin: center; }
+        .muscle-slice { stroke: #FFF; stroke-width: 1.2; transition: all 0.4s ease; cursor: pointer; }
         .no-click { cursor: default; pointer-events: none; opacity: 0.6; } 
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
-        
-        /* --- 强化版选中反馈 --- */
-        .is-active, .is-active path, .is-active rect, .is-active circle { 
-            fill: #FB7185 !important; 
-            stroke: #E11D48 !important; /* 深红色描边 */
-            stroke-width: 1.5 !important;
-            filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.6));
-            transform: scale(1.08); /* 选中微扩 */
-        }
+      .is-active, .is-active path, .is-active rect, .is-active circle { 
+    fill: #FB7185 !important; 
+    stroke: #E11D48 !important; /* 强化深色描边 */
+    stroke-width: 1.5; 
+    filter: drop-shadow(0 0 15px rgba(251, 113, 131, 0.8)); /* 增强发光感 */
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(1.05); /* 选中后微弱放大，增加动感 */
+}
 
-        /* 状态标签样式 */
-        .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
+/* 专门修复颜色选择器中“白色”圆圈的辨识度 */
+.color-dot[data-color="#FFFFFF"] {
+    border: 1px solid #E2E8F0; /* 给白色圆圈加一个浅灰色细边框，防止融入背景 */
+}
+
+.color-dot.selected { 
+    transform: scale(1.25); 
+    border-color: #6366F1 !important; /* 选中时统一使用品牌蓝作为激活边框 */
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3), 0 4px 12px rgba(0,0,0,0.15); 
+    z-index: 10; 
+}        .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
         .status-ready { background: #F1F5F9; color: #64748B; }
         .status-recovering { background: #FEF3C7; color: #92400E; }
         .status-training { background: #DBEAFE; color: #1E40AF; }
-        
         .mode-btn { padding: 12px 24px; border-radius: 16px; font-weight: 900; font-size: 14px; border: 2px solid #F1F5F9; background: #FFF; color: #64748B; transition: all 0.3s; }
         .mode-btn.active { background: var(--brand-main); color: white; border-color: var(--brand-main); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
-        
         input[type=range] { -webkit-appearance: none; background: #E2E8F0; height: 6px; border-radius: 3px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--brand-main); border: 3px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
         .nav-active { color: var(--brand-main) !important; font-weight: 900; }
-        
-        /* --- 颜色选择器强化反馈 --- */
-        .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid #E2E8F0; position: relative; }
-        .color-dot.selected { 
-            transform: scale(1.3); 
-            border-color: var(--brand-main) !important; /* 统一使用品牌蓝选中框 */
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); 
-            z-index: 10; 
-        }
-        .color-dot[data-color="#FFFFFF"] { background-color: #FFFFFF; } /* 确保白色背景明确 */
-
-        /* 日历与记录 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; }
         .day-today { background: var(--brand-main) !important; color: white !important; }
@@ -64,9 +56,12 @@
         .record-card { border-left: 8px solid transparent; position: relative; transition: transform 0.2s; border-radius: 20px; }
         .action-btn { position: absolute; bottom: 14px; font-size: 18px; color: #CBD5E1; }
         .delete-btn { right: 16px; }
+        .edit-btn { right: 48px; }
         .supp-card { transition: all 0.3s; border: 2px solid transparent; }
         .supp-card.selected { border-color: var(--brand-main); background: #F8FAFF; }
         .streak-badge { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; padding: 10px 20px; border-radius: 20px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
+        .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; position: relative; }
+        .color-dot.selected { transform: scale(1.2); border-color: white; box-shadow: 0 0 0 2px currentColor; z-index: 10; }
     </style>
 </head>
 <body>
@@ -127,7 +122,7 @@
                     <div><p class="text-[10px] font-black text-slate-400 uppercase">用时</p><h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3></div>
                     <div id="color-palette" class="grid grid-cols-3 gap-3">
                         <div class="color-dot bg-indigo-950 text-indigo-950 selected" data-color="#1E1B4B" onclick="selectColor(this)"></div>
-                        <div class="color-dot bg-white text-white" data-color="#FFFFFF" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-white border text-white" data-color="#FFFFFF" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-rose-500 text-rose-500" data-color="#F43F5E" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-emerald-500 text-emerald-500" data-color="#10B981" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-sky-500 text-sky-500" data-color="#0EA5E9" onclick="selectColor(this)"></div>
@@ -171,12 +166,7 @@
         let records = JSON.parse(localStorage.getItem('fitlog_logs_v94')) || [];
         let selectedParts = new Set(), selectedSupps = new Set(), selectedColor = '#1E1B4B', timer, seconds = 0;
         const intensityLabels = ["", "轻松自如", "微微出汗", "呼吸急促", "肌肉酸胀", "力竭边缘"];
-        const suppConfigs = [
-            { id: 'pro', name: '蛋白粉', icon: '🍗', unit: '克', max: 60, def: 30 },
-            { id: 'cre', name: '肌酸', icon: '⚡', unit: '克', max: 10, def: 5 },
-            { id: 'pre', name: '氮泵', icon: '🔥', unit: '勺', max: 2, def: 1 },
-            { id: 'fish', name: '鱼油', icon: '🐟', unit: '粒', max: 4, def: 2 }
-        ];
+        const suppConfigs = [{ id: 'pro', name: '蛋白粉', icon: '🍗', unit: '克', max: 60, def: 30 },{ id: 'cre', name: '肌酸', icon: '⚡', unit: '克', max: 10, def: 5 },{ id: 'pre', name: '氮泵', icon: '🔥', unit: '勺', max: 2, def: 1 },{ id: 'fish', name: '鱼油', icon: '🐟', unit: '粒', max: 4, def: 2 }];
 
         function init() { renderCalendar(); updateHeatmap(); renderSupps(); updateStatusUI(); calculateStreak(); updateQuickRepeatUI(); }
         
@@ -198,7 +188,9 @@
                 fireCelebration();
                 if (window.navigator.vibrate) window.navigator.vibrate([40, 30, 40, 30, 80]);
                 setTimeout(() => { showView('calendar'); resetWorkoutState(); }, 1000);
-            } else { showView('calendar'); }
+            } else {
+                showView('calendar');
+            }
         }
 
         function resetWorkoutState() {
@@ -213,11 +205,7 @@
             updateStatusUI(); updateHeatmap(); updateQuickRepeatUI();
         }
 
-        function selectColor(el) { 
-            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected')); 
-            el.classList.add('selected'); 
-            selectedColor = el.getAttribute('data-color'); 
-        }
+        function selectColor(el) { document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected')); el.classList.add('selected'); selectedColor = el.getAttribute('data-color'); }
         
         function updateHeatmap() { 
             document.querySelectorAll('.muscle-slice').forEach(slice => { 
@@ -238,11 +226,13 @@
             selectedParts.forEach(p => { 
                 const tag = document.createElement('span'); 
                 if(['有氧','拉伸'].includes(p)) { 
-                    tag.className = 'status-tag status-ready'; tag.innerText = p; 
+                    tag.className = 'status-tag status-ready'; 
+                    tag.innerText = p; 
                 } else { 
                     const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60); 
                     let cfg = hrs < 24 ? {l:'刚练', c:'status-training'} : (hrs < 48 ? {l:'恢复', c:'status-recovering'} : {l:'就绪', c:'status-ready'}); 
-                    tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}:${cfg.l}`; 
+                    tag.className = `status-tag ${cfg.c}`; 
+                    tag.innerText = `${p}:${cfg.l}`; 
                 } 
                 statusBox.appendChild(tag); 
             });
@@ -264,8 +254,9 @@
             if (!group) return; 
             if (window.navigator.vibrate) window.navigator.vibrate(15); 
             const partName = group.getAttribute('data-part'); 
+            const pieces = document.querySelectorAll(`[data-part="${partName}"]`); 
             const isActive = group.classList.contains('is-active'); 
-            document.querySelectorAll(`[data-part="${partName}"]`).forEach(p => p.classList.toggle('is-active')); 
+            pieces.forEach(p => p.classList.toggle('is-active')); 
             isActive ? selectedParts.delete(partName) : selectedParts.add(partName); 
             updateStatusUI(); 
         });
@@ -304,7 +295,7 @@
 
         function applyLastWorkout() {
             const lastWorkout = [...records].reverse().find(r => r.type === 'workout'); if (!lastWorkout) return;
-            selectedParts.clear(); document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active')); 
+            selectedParts.clear(); document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active')); document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             const parts = lastWorkout.parts.split(' · ');
             parts.forEach(p => { 
                 selectedParts.add(p); 
