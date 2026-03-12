@@ -45,6 +45,7 @@
         .record-card { border-left: 8px solid transparent; position: relative; }
         .delete-btn { position: absolute; bottom: 12px; right: 16px; color: #CBD5E1; font-size: 18px; padding: 4px; font-weight: normal; }
         .delete-btn:active { color: #F43F5E; }
+        #color-palette div { cursor: pointer; pointer-events: auto !important; }
     </style>
 </head>
 <body>
@@ -97,14 +98,14 @@
                     <div><p class="text-[10px] font-black text-slate-400">计时 DURATION</p><h3 class="text-4xl font-black mt-1 tabular-nums" id="timer-display">00:00:00</h3></div>
                     <div class="text-right flex-1 pl-4">
                         <p class="text-[10px] font-black text-slate-400 uppercase mb-2">标记 Color</p>
-                        <div class="grid grid-cols-3 gap-2" id="color-palette">
-                            <div class="w-6 h-6 rounded-full bg-indigo-950 ring-2 ring-indigo-400" data-color="#1E1B4B" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-white border ring-2 ring-transparent" data-color="#FFFFFF" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-rose-500 ring-2 ring-transparent" data-color="#F43F5E" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-emerald-500 ring-2 ring-transparent" data-color="#10B981" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-sky-500 ring-2 ring-transparent" data-color="#0EA5E9" onclick="selectColor(this)"></div>
-                            <div class="w-6 h-6 rounded-full bg-orange-400 ring-2 ring-transparent" data-color="#FB923C" onclick="selectColor(this)"></div>
-                        </div>
+                        <div class="flex flex-wrap justify-end gap-1.5" id="color-palette">
+    <div class="w-5 h-5 rounded-full bg-indigo-950 ring-2 ring-indigo-400" data-color="#1E1B4B" onclick="selectColor(this)"></div>
+    <div class="w-5 h-5 rounded-full bg-white border ring-1 ring-transparent" data-color="#FFFFFF" onclick="selectColor(this)"></div>
+    <div class="w-5 h-5 rounded-full bg-rose-500 ring-1 ring-transparent" data-color="#F43F5E" onclick="selectColor(this)"></div>
+    <div class="w-5 h-5 rounded-full bg-emerald-500 ring-1 ring-transparent" data-color="#10B981" onclick="selectColor(this)"></div>
+    <div class="w-5 h-5 rounded-full bg-sky-500 ring-1 ring-transparent" data-color="#0EA5E9" onclick="selectColor(this)"></div>
+    <div class="w-5 h-5 rounded-full bg-orange-400 ring-1 ring-transparent" data-color="#FB923C" onclick="selectColor(this)"></div>
+</div>
                     </div>
                 </div>
                 <div class="space-y-4">
@@ -151,10 +152,16 @@
         function init() { renderCalendar(); updateHeatmap(); renderHistory(); }
 
         function selectColor(el) {
-            document.querySelectorAll('#color-palette div').forEach(d => d.classList.remove('ring-indigo-400','ring-2'));
-            el.classList.add('ring-indigo-400','ring-2'); 
-            selectedColor = el.getAttribute('data-color');
-        }
+    // 移除所有圆点的选中状态
+    document.querySelectorAll('#color-palette div').forEach(d => {
+        d.classList.remove('ring-indigo-400','ring-2', 'scale-110');
+        d.classList.add('ring-transparent', 'ring-1');
+    });
+    // 给当前点中的圆点加特效
+    el.classList.add('ring-indigo-400','ring-2', 'scale-110');
+    el.classList.remove('ring-transparent', 'ring-1');
+    selectedColor = el.getAttribute('data-color');
+}
 
         function updateHeatmap() {
             document.querySelectorAll('.muscle-slice').forEach(slice => {
