@@ -20,27 +20,23 @@
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
-        .is-active, .is-active path, .is-active rect, .is-active circle { fill: #FB7185 !important; stroke: #FDA4AF !important; stroke-width: 0.8; filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.45)); }
+        .is-active, .is-active circle, .is-active path, .is-active rect { fill: #FB7185 !important; stroke: #FDA4AF !important; stroke-width: 0.8; filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.45)); }
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
         .mode-btn { padding: 12px 24px; border-radius: 16px; font-weight: 900; font-size: 14px; border: 2px solid #F1F5F9; background: #FFF; color: #64748B; transition: all 0.3s; }
         .mode-btn.active { background: var(--brand-main); color: white; border-color: var(--brand-main); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
         input[type=range] { -webkit-appearance: none; background: #E2E8F0; height: 6px; border-radius: 3px; width: 100%; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--brand-main); border: 3px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .nav-active { color: var(--brand-main) !important; font-weight: 900; }
-        .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; }
-        .day-today { background: var(--brand-main) !important; color: white !important; }
         
-        /* 颜色选择器一行排开 */
-        .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; position: relative; display: flex; align-items: center; justify-content: center; }
-        .color-dot.selected { transform: scale(1.2); z-index: 10; border-color: #E2E8F0; box-shadow: 0 0 0 2px #CBD5E1; }
-        .color-dot.selected::after { content: ''; width: 6px; height: 6px; background: currentColor; border-radius: 50%; filter: contrast(1.5); }
-
-        /* 聚焦与隐藏计时逻辑 */
-        #timer-container { display: none; opacity: 0; transition: all 0.5s; }
-        .focus-timer #timer-container { display: flex; opacity: 1; margin-top: 1rem; }
+        /* 优化后的计时器聚焦样式 */
+        #timer-container { display: none; opacity: 0; flex-direction: column; align-items: center; justify-content: center; }
+        .focus-timer #timer-container { display: flex; opacity: 1; transition: opacity 0.5s; }
+        .focus-timer #timer-display { font-size: 3.5rem; letter-spacing: -2px; color: var(--brand-main); line-height: 1; margin: 10px 0; }
         .focus-timer #model-section, .focus-timer .mode-switch-section, .focus-timer #quick-repeat-container { display: none; }
-        .focus-timer #timer-display { font-size: 5rem; color: var(--brand-main); }
-        .focus-timer #main-card { padding: 4rem 1.5rem; }
+        .focus-timer #main-card { padding-top: 3rem; padding-bottom: 3rem; }
+
+        .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .color-dot.selected { transform: scale(1.2); border-color: #E2E8F0; box-shadow: 0 0 0 2px #CBD5E1; }
     </style>
 </head>
 <body>
@@ -51,17 +47,13 @@
             <section id="main-card" class="glass-card p-6 flex flex-col items-center">
                 <div id="model-section" class="flex justify-around items-start w-full mt-2 mb-2">
                     <div class="flex-1 flex flex-col items-center">
-                        <span class="text-[10px] font-black text-slate-300 mb-4 uppercase tracking-widest">Front</span>
+                        <span class="text-[10px] font-black text-slate-300 mb-4 uppercase">Front</span>
                         <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" /> 
                             <circle data-part="肩膀" cx="31" cy="29" r="7" class="muscle-slice heat-rested" />
                             <circle data-part="肩膀" cx="69" cy="29" r="7" class="muscle-slice heat-rested" />
                             <path data-part="胸部" d="M36 32 a14 14 0 0 1 28 0 v4 h-28 z" class="muscle-slice heat-rested" />
-                            <g data-part="核心">
-                                <rect x="41" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                                <rect x="41" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                                <rect x="41" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" />
-                            </g>
+                            <g data-part="核心"><rect x="41" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="41" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="41" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" /></g>
                             <rect data-part="大臂" x="18" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" /><rect data-part="大臂" x="73" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" />
                             <rect data-part="小臂" x="15" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" /><rect data-part="小臂" x="77" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" />
                             <rect data-part="大腿" x="38" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" /><rect data-part="大腿" x="51" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" />
@@ -69,13 +61,11 @@
                         </svg>
                     </div>
                     <div class="flex-1 flex flex-col items-center">
-                        <span class="text-[10px] font-black text-slate-300 mb-4 uppercase tracking-widest">Back</span>
+                        <span class="text-[10px] font-black text-slate-300 mb-4 uppercase">Back</span>
                         <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" />
                             <path data-part="背部" d="M28 28 q22 -6 44 0 l-4 16 h-36 z" class="muscle-slice heat-rested" />
-                            <g data-part="臀部">
-                                <circle cx="43" cy="64" r="11" class="muscle-slice heat-rested" /><circle cx="57" cy="64" r="11" class="muscle-slice heat-rested" />
-                            </g>
+                            <g data-part="臀部"><circle cx="43" cy="64" r="11" class="muscle-slice heat-rested" /><circle cx="57" cy="64" r="11" class="muscle-slice heat-rested" /></g>
                             <rect data-part="大腿" x="40" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" /><rect data-part="大腿" x="50" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" />
                             <rect data-part="小腿" x="41" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" /><rect data-part="小腿" x="51" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" />
                         </svg>
@@ -84,9 +74,9 @@
 
                 <div id="recovery-status" class="flex flex-wrap justify-center gap-1 min-h-[22px] mb-4"></div>
 
-                <div id="timer-container" class="flex-col items-center">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Training</p>
-                    <h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3>
+                <div id="timer-container">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Active Training</p>
+                    <h3 class="font-black tabular-nums" id="timer-display">00:00:00</h3>
                 </div>
 
                 <div class="mode-switch-section flex gap-3 w-full mt-4">
@@ -94,41 +84,31 @@
                     <button id="btn-stretch" onclick="toggleSpecial('拉伸')" class="mode-btn flex-1 py-3 shadow-sm">🧘 拉伸</button>
                 </div>
 
-                <div id="quick-repeat-container" class="w-full mt-4 hidden">
-                    <button onclick="applyLastWorkout()" class="w-full bg-slate-50 border-2 border-slate-100 py-3 px-4 rounded-2xl flex items-center justify-between active:scale-95 transition-all">
-                        <div class="flex items-center gap-3">
-                            <div id="last-color-dot" class="w-3 h-3 rounded-full shadow-sm"></div>
-                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter">复刻上次</span>
-                        </div>
-                        <span id="last-workout-info" class="text-[10px] font-bold text-indigo-950 truncate ml-2"></span>
-                    </button>
-                </div>
-
                 <button id="go-btn" class="w-full mt-6 bg-slate-400 text-white py-5 px-6 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">请选择部位</button>
             </section>
 
             <section id="settings-card" class="glass-card p-6 space-y-6">
                 <div class="w-full space-y-2">
-                    <div class="flex justify-between items-center"><p class="text-[10px] font-black text-slate-400 uppercase">重量 Weight</p><span id="weight-val" class="text-xs font-black text-rose-500">2 kg</span></div>
+                    <div class="flex justify-between items-end"><p class="text-[10px] font-black text-slate-400 uppercase">重量 Weight</p><span id="weight-val" class="text-lg font-black text-rose-500">2 kg</span></div>
                     <input type="range" id="weight-slider" min="0" max="100" step="2" value="2">
                 </div>
                 <div class="w-full space-y-2">
-                    <div class="flex justify-between items-center"><p class="text-[10px] font-black text-slate-400 uppercase">强度 Intensity</p><span id="intensity-val" class="text-xs font-black text-indigo-500">轻松自如</span></div>
+                    <div class="flex justify-between items-end"><p class="text-[10px] font-black text-slate-400 uppercase">强度 Intensity</p><span id="intensity-val" class="text-lg font-black text-indigo-500">轻松自如</span></div>
                     <input type="range" id="intensity-slider" min="1" max="5" value="1">
                 </div>
                 <div class="w-full space-y-2">
                     <p class="text-[10px] font-black text-slate-400 uppercase">心得 Notes</p>
-                    <textarea id="note-field" rows="1" placeholder="记录此刻的状态..." class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm outline-none"></textarea>
+                    <textarea id="note-field" rows="1" placeholder="记录此刻的状态..." class="w-full bg-slate-100 border-2 border-slate-200 rounded-2xl p-4 text-sm outline-none focus:border-indigo-300 transition-colors"></textarea>
                 </div>
                 <div class="w-full space-y-3">
                     <p class="text-[10px] font-black text-slate-400 uppercase">颜色标记 Tag</p>
-                    <div id="color-palette" class="flex justify-between items-center px-2">
-                        <div class="color-dot bg-indigo-950 text-indigo-950 selected" data-color="#1E1B4B" onclick="selectColor(this)"></div>
-                        <div class="color-dot bg-white border border-slate-200 text-white" data-color="#FFFFFF" onclick="selectColor(this)"></div>
-                        <div class="color-dot bg-rose-500 text-rose-500" data-color="#F43F5E" onclick="selectColor(this)"></div>
-                        <div class="color-dot bg-emerald-500 text-emerald-500" data-color="#10B981" onclick="selectColor(this)"></div>
-                        <div class="color-dot bg-sky-500 text-sky-500" data-color="#0EA5E9" onclick="selectColor(this)"></div>
-                        <div class="color-dot bg-violet-600 text-violet-600" data-color="#7C3AED" onclick="selectColor(this)"></div>
+                    <div id="color-palette" class="flex justify-between items-center px-1">
+                        <div class="color-dot bg-indigo-950 selected" data-color="#1E1B4B" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-white border border-slate-200" data-color="#FFFFFF" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-rose-500" data-color="#F43F5E" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-emerald-500" data-color="#10B981" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-sky-500" data-color="#0EA5E9" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-violet-600" data-color="#7C3AED" onclick="selectColor(this)"></div>
                     </div>
                 </div>
             </section>
@@ -137,41 +117,66 @@
 
     <nav class="fixed bottom-8 left-8 right-8 h-20 glass-card flex items-center justify-around px-6 z-50">
         <button onclick="showView('workout')" id="nav-workout" class="flex flex-col items-center gap-1 nav-active"><span class="text-xl">⚡</span><span class="text-[10px] font-black uppercase">训练</span></button>
-        <button onclick="showView('supps')" id="nav-supps" class="flex flex-col items-center gap-1 text-slate-300"><span class="text-xl">💊</span><span class="text-[10px] font-black uppercase">补剂</span></button>
-        <button onclick="showView('calendar')" id="nav-calendar" class="flex flex-col items-center gap-1 text-slate-300"><span class="text-xl">📅</span><span class="text-[10px] font-black uppercase">历史</span></button>
+        <button onclick="showView('supps')" class="flex flex-col items-center gap-1 text-slate-300"><span class="text-xl">💊</span><span class="text-[10px] font-black uppercase">补剂</span></button>
+        <button onclick="showView('calendar')" class="flex flex-col items-center gap-1 text-slate-300"><span class="text-xl">📅</span><span class="text-[10px] font-black uppercase">历史</span></button>
     </nav>
 
-    <div id="supps-view" class="px-6 pt-12 pb-40 hidden">...</div>
-    <div id="calendar-view" class="px-6 pt-12 pb-32 hidden">...</div>
-
     <script>
-        let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v94')) || {};
-        let records = JSON.parse(localStorage.getItem('fitlog_logs_v94')) || [];
+        // 使用更高版本的 Key 确保数据隔离
+        const DATA_KEY = 'fitlog_v100_data';
+        let storage = JSON.parse(localStorage.getItem(DATA_KEY)) || { records: [], recovery: {} };
         let selectedParts = new Set(), selectedColor = '#1E1B4B', timer, seconds = 0;
         const intensityLabels = ["", "轻松自如", "微微出汗", "呼吸急促", "肌肉酸胀", "力竭边缘"];
 
-        function init() { updateHeatmap(); updateStatusUI(); updateQuickRepeatUI(); }
+        function init() { 
+            document.getElementById('weight-val').innerText = "2 kg";
+            document.getElementById('weight-slider').value = 2;
+            updateHeatmap(); 
+            updateStatusUI(); 
+        }
 
-        // 核心控制按钮逻辑
+        function updateHeatmap() {
+            document.querySelectorAll('.muscle-slice').forEach(slice => {
+                const part = slice.getAttribute('data-part');
+                if (!part) return;
+                const lastTime = storage.recovery[part] || 0;
+                const hrs = (Date.now() - lastTime) / (1000 * 60 * 60);
+                slice.classList.remove('heat-rested', 'heat-recovering', 'heat-fatigued');
+                if (hrs < 24) slice.classList.add('heat-fatigued');
+                else if (hrs < 48) slice.classList.add('heat-recovering');
+                else slice.classList.add('heat-rested');
+            });
+        }
+
         document.getElementById('go-btn').onclick = function() {
             if (this.innerText.includes('完成')) {
                 const now = new Date();
-                records.push({ id: Date.now(), type: 'workout', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: document.getElementById('timer-display').innerText, parts: Array.from(selectedParts).join(' · '), weight: document.getElementById('weight-val').innerText, intensity: document.getElementById('intensity-val').innerText, color: selectedColor, note: document.getElementById('note-field').value });
-                selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
+                const record = {
+                    id: Date.now(),
+                    dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`,
+                    time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'),
+                    duration: document.getElementById('timer-display').innerText,
+                    parts: Array.from(selectedParts).join(' · '),
+                    weight: document.getElementById('weight-val').innerText,
+                    intensity: document.getElementById('intensity-val').innerText,
+                    color: selectedColor,
+                    note: document.getElementById('note-field').value
+                };
                 
-                // 退出聚焦模式
+                // 更新恢复状态
+                selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) storage.recovery[p] = Date.now(); });
+                storage.records.push(record);
+                localStorage.setItem(DATA_KEY, JSON.stringify(storage));
+
                 document.body.classList.remove('focus-timer');
                 document.getElementById('app-header').style.opacity = '1';
-                
-                saveAndRefetch(true); 
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                setTimeout(() => location.reload(), 1200);
             } else {
-                // 进入聚焦模式：开启计时，隐藏背景和其他 UI
                 document.body.classList.add('focus-timer');
                 document.getElementById('app-header').style.opacity = '0';
-                
                 this.innerText = '完成训练 FINISH'; 
                 this.classList.replace('bg-indigo-600', 'bg-rose-500');
-                
                 timer = setInterval(() => { 
                     seconds++; 
                     const h = Math.floor(seconds/3600).toString().padStart(2,'0'); 
@@ -182,33 +187,6 @@
             }
         };
 
-        function resetWorkoutState() {
-            seconds = 0; clearInterval(timer);
-            document.getElementById('timer-display').innerText = '00:00:00';
-            document.getElementById('go-btn').innerText = '请选择部位';
-            document.getElementById('go-btn').classList.replace('bg-rose-500', 'bg-slate-400');
-            selectedParts.clear();
-            document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active'));
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('note-field').value = '';
-            updateStatusUI(); updateHeatmap(); updateQuickRepeatUI();
-        }
-
-        function saveAndRefetch(shouldCelebrate) {
-            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); 
-            localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
-            if (shouldCelebrate) {
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                setTimeout(() => { resetWorkoutState(); location.reload(); }, 1200);
-            }
-        }
-
-        function showView(view) {
-            // 简单视图切换逻辑
-            ['workout-view', 'supps-view', 'calendar-view'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
-            document.getElementById(`${view}-view`).classList.remove('hidden');
-        }
-
         function selectColor(el) { 
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected')); 
             el.classList.add('selected'); 
@@ -216,18 +194,30 @@
         }
 
         function updateStatusUI() {
-            const statusBox = document.getElementById('recovery-status'); const startBtn = document.getElementById('go-btn'); statusBox.innerHTML = '';
-            selectedParts.forEach(p => { const tag = document.createElement('span'); tag.className = 'status-tag bg-slate-100 text-slate-500 font-black text-[10px]'; tag.innerText = p; statusBox.appendChild(tag); });
+            const statusBox = document.getElementById('recovery-status');
+            const startBtn = document.getElementById('go-btn');
+            statusBox.innerHTML = '';
+            selectedParts.forEach(p => {
+                const tag = document.createElement('span');
+                tag.className = 'status-tag bg-slate-100 text-slate-500 font-black text-[10px]';
+                tag.innerText = p;
+                statusBox.appendChild(tag);
+            });
             if (!startBtn.innerText.includes('完成')) {
-                if (selectedParts.size > 0) { startBtn.innerText = `开始训练 ${Array.from(selectedParts).join('·')}`; startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); }
-                else { startBtn.innerText = '请选择部位'; startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); }
+                if (selectedParts.size > 0) {
+                    startBtn.innerText = `开始训练 ${Array.from(selectedParts)[0]}`;
+                    startBtn.classList.replace('bg-slate-400', 'bg-indigo-600');
+                } else {
+                    startBtn.innerText = '请选择部位';
+                    startBtn.classList.replace('bg-indigo-600', 'bg-slate-400');
+                }
             }
         }
 
-        // 交互绑定
         document.querySelectorAll('.muscle-slice').forEach(el => el.onclick = (e) => {
-            const partName = e.target.closest('[data-part]')?.getAttribute('data-part');
-            if(!partName) return;
+            const group = e.target.closest('[data-part]');
+            if (!group) return;
+            const partName = group.getAttribute('data-part');
             document.querySelectorAll(`[data-part="${partName}"]`).forEach(p => p.classList.toggle('is-active'));
             selectedParts.has(partName) ? selectedParts.delete(partName) : selectedParts.add(partName);
             updateStatusUI();
@@ -242,9 +232,6 @@
 
         document.getElementById('weight-slider').oninput = function() { document.getElementById('weight-val').innerText = `${this.value} kg`; };
         document.getElementById('intensity-slider').oninput = function() { document.getElementById('intensity-val').innerText = intensityLabels[this.value]; };
-        
-        function updateHeatmap() { /* 同前版本逻辑 */ }
-        function updateQuickRepeatUI() { /* 同前版本逻辑 */ }
 
         init();
     </script>
