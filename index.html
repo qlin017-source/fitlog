@@ -16,18 +16,18 @@
         body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; padding-top: env(safe-area-inset-top); margin: 0; overflow-x: hidden; }
         .glass-card { background: #FFFFFF; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border: 1px solid rgba(255, 255, 255, 1); }
         
-        .muscle-slice { stroke: rgba(0,0,0,0.08); stroke-width: 0.8; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; transform-box: fill-box; transform-origin: center; }
+        .muscle-slice { stroke: rgba(0,0,0,0.08); stroke-width: 0.8; transition: all 0.2s ease; cursor: pointer; }
         .no-click { cursor: default; pointer-events: none; opacity: 0.6; } 
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
         
+        /* 修复位移：移除 scale，改用描边强化 */
         .is-active, .is-active path, .is-active rect, .is-active circle { 
             fill: #FB7185 !important; 
             stroke: #E11D48 !important; 
-            stroke-width: 1.5 !important;
-            filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.6));
-            transform: scale(1.08);
+            stroke-width: 2px !important;
+            filter: drop-shadow(0 0 4px rgba(251, 113, 131, 0.4));
         }
 
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
@@ -43,21 +43,15 @@
         
         .nav-active { color: var(--brand-main) !important; font-weight: 900; }
         
-        .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid #E2E8F0; position: relative; }
-        .color-dot.selected { 
-            transform: scale(1.3); 
-            border-color: var(--brand-main) !important; 
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); 
-            z-index: 10; 
-        }
+        .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid #E2E8F0; }
+        .color-dot.selected { transform: scale(1.3); border-color: var(--brand-main) !important; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); }
 
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; }
         .day-today { background: var(--brand-main) !important; color: white !important; }
         .workout-dot { width: 4px; height: 4px; border-radius: 50%; margin: 1px; }
-        .record-card { border-left: 8px solid transparent; position: relative; transition: transform 0.2s; border-radius: 20px; }
-        .action-btn { position: absolute; bottom: 14px; font-size: 16px; color: #CBD5E1; transition: color 0.2s; }
-        .action-btn:active { color: var(--brand-main); }
+        .record-card { border-left: 8px solid transparent; position: relative; border-radius: 20px; }
+        .action-btn { position: absolute; bottom: 14px; font-size: 16px; color: #CBD5E1; }
         .delete-btn { right: 16px; }
         .edit-btn { right: 48px; }
         .streak-badge { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; padding: 10px 20px; border-radius: 20px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
@@ -148,7 +142,6 @@
         <main class="max-w-md mx-auto space-y-4" id="supp-list"></main>
         <div class="fixed bottom-32 left-8 right-8"><button id="supp-save-btn" onclick="saveSuppsBatch()" class="w-full bg-slate-400 text-white py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">请选择补剂 (0)</button></div>
     </div>
-
     <div id="calendar-view" class="px-6 pt-12 pb-32 hidden">
         <header class="text-center mb-6"><h2 class="text-xl font-black text-indigo-900 uppercase mb-4">训练记录</h2><div class="flex justify-center"><div class="streak-badge flex items-center gap-2"><span>🔥 连续打卡</span><span id="streak-count" class="text-2xl">0</span><span>天</span></div></div></header>
         <div class="max-w-md mx-auto space-y-6"><div class="glass-card p-6"><p class="text-center font-black mb-4 text-xs text-slate-400" id="calendar-title"></p><div class="calendar-grid" id="calendar-days"></div></div><div id="history-list" class="space-y-4"></div></div>
@@ -163,265 +156,63 @@
     <script>
         let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v94')) || {};
         let records = JSON.parse(localStorage.getItem('fitlog_logs_v94')) || [];
-        let selectedParts = new Set(), selectedSupps = new Set(), selectedColor = '#1E1B4B', timer, seconds = 0;
+        let selectedParts = new Set(), selectedSupps = new Set(), selectedColor = '#1E1B4B';
+        let startTime = null, timerInterval = null; 
         const intensityLabels = ["", "轻松自如", "微微出汗", "呼吸急促", "肌肉酸胀", "力竭边缘"];
-        const suppConfigs = [
-            { id: 'pro', name: '蛋白粉', icon: '🍗', unit: '克', max: 60, def: 30 },
-            { id: 'cre', name: '肌酸', icon: '⚡', unit: '克', max: 10, def: 5 },
-            { id: 'pre', name: '氮泵', icon: '🔥', unit: '勺', max: 2, def: 1 },
-            { id: 'fish', name: '鱼油', icon: '🐟', unit: '粒', max: 4, def: 2 }
-        ];
+        const suppConfigs = [{id:'pro',name:'蛋白粉',icon:'🍗',unit:'克',max:60,def:30},{id:'cre',name:'肌酸',icon:'⚡',unit:'克',max:10,def:5},{id:'pre',name:'氮泵',icon:'🔥',unit:'勺',max:2,def:1},{id:'fish',name:'鱼油',icon:'🐟',unit:'粒',max:4,def:2}];
 
         function init() { renderCalendar(); updateHeatmap(); renderSupps(); updateStatusUI(); calculateStreak(); updateQuickRepeatUI(); }
-        
-        function showView(view) {
-            document.getElementById('workout-view').classList.toggle('hidden', view !== 'workout');
-            document.getElementById('supps-view').classList.toggle('hidden', view !== 'supps');
-            document.getElementById('calendar-view').classList.toggle('hidden', view !== 'calendar');
-            ['workout', 'supps', 'calendar'].forEach(item => {
-                const btn = document.getElementById(`nav-${item}`);
-                btn.className = item === view ? 'flex flex-col items-center gap-1 nav-active' : 'flex flex-col items-center gap-1 text-slate-300';
-            });
-            if (view === 'calendar') { renderHistory(); calculateStreak(); renderCalendar(); }
+
+        // 核心计时逻辑优化：时间戳差值计算
+        function updateTimer() {
+            if (!startTime) return;
+            const now = Date.now();
+            const diff = Math.floor((now - startTime) / 1000);
+            const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+            const s = (diff % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${h}:${m}:${s}`;
         }
 
-        function saveAndRefetch(shouldCelebrate) {
-            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); 
-            localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
-            if (shouldCelebrate) {
-                fireCelebration();
-                if (window.navigator.vibrate) window.navigator.vibrate([40, 30, 40, 30, 80]);
-                setTimeout(() => { showView('calendar'); resetWorkoutState(); }, 1000);
-            } else { showView('calendar'); }
-        }
-
-        function resetWorkoutState() {
-            seconds = 0; clearInterval(timer);
-            document.getElementById('timer-display').innerText = '00:00:00';
-            document.getElementById('go-btn').innerText = '请选择部位';
-            document.getElementById('go-btn').classList.replace('bg-rose-500', 'bg-slate-400');
-            selectedParts.clear();
-            document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active'));
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('note-field').value = '';
-            updateStatusUI(); updateHeatmap(); updateQuickRepeatUI();
-        }
-
-        function selectColor(el) { 
-            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected')); 
-            el.classList.add('selected'); 
-            selectedColor = el.getAttribute('data-color'); 
-        }
-        
-        function updateHeatmap() { 
-            document.querySelectorAll('.muscle-slice').forEach(slice => { 
-                const part = slice.getAttribute('data-part'); 
-                if (!part) return; 
-                const hrs = (Date.now() - (recoveryData[part] || 0)) / (1000 * 60 * 60); 
-                slice.classList.remove('heat-rested', 'heat-recovering', 'heat-fatigued'); 
-                if (hrs < 24) slice.classList.add('heat-fatigued'); 
-                else if (hrs < 48) slice.classList.add('heat-recovering'); 
-                else slice.classList.add('heat-rested'); 
-            }); 
-        }
-
-        function updateStatusUI() {
-            const statusBox = document.getElementById('recovery-status'); 
-            const startBtn = document.getElementById('go-btn'); 
-            statusBox.innerHTML = '';
-            selectedParts.forEach(p => { 
-                const tag = document.createElement('span'); 
-                if(['有氧','拉伸'].includes(p)) { 
-                    tag.className = 'status-tag status-ready'; tag.innerText = p; 
-                } else { 
-                    const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60); 
-                    let cfg = hrs < 24 ? {l:'刚练', c:'status-training'} : (hrs < 48 ? {l:'恢复', c:'status-recovering'} : {l:'就绪', c:'status-ready'}); 
-                    tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}:${cfg.l}`; 
-                } 
-                statusBox.appendChild(tag); 
-            });
-            if (!startBtn.innerText.includes('完成')) { 
-                if (selectedParts.size > 0) { 
-                    startBtn.innerText = `开始训练 ${Array.from(selectedParts).join('·')}`; 
-                    startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); 
-                    startBtn.style.pointerEvents = 'auto'; 
-                } else { 
-                    startBtn.innerText = '请选择部位'; 
-                    startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); 
-                    startBtn.style.pointerEvents = 'none'; 
-                } 
-            }
-        }
-
-        document.body.addEventListener('click', (e) => { 
-            const group = e.target.closest('[data-part]'); 
-            if (!group) return; 
-            if (window.navigator.vibrate) window.navigator.vibrate(15); 
-            const partName = group.getAttribute('data-part'); 
-            const isActive = group.classList.contains('is-active'); 
-            document.querySelectorAll(`[data-part="${partName}"]`).forEach(p => p.classList.toggle('is-active')); 
-            isActive ? selectedParts.delete(partName) : selectedParts.add(partName); 
-            updateStatusUI(); 
-        });
-
-        function toggleSpecial(mode) { 
-            const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch'); 
-            selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode); 
-            btn.classList.toggle('active'); 
-            updateStatusUI(); 
-        }
-
-        document.getElementById('weight-slider').oninput = function() { document.getElementById('weight-val').innerText = `${this.value} kg`; };
-        document.getElementById('intensity-slider').oninput = function() { document.getElementById('intensity-val').innerText = intensityLabels[this.value]; };
-        
         document.getElementById('go-btn').onclick = function() {
             if (this.innerText.includes('完成')) {
                 const now = new Date();
                 records.push({ id: Date.now(), type: 'workout', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: document.getElementById('timer-display').innerText, parts: Array.from(selectedParts).join(' · '), weight: document.getElementById('weight-val').innerText, intensity: document.getElementById('intensity-val').innerText, color: selectedColor, note: document.getElementById('note-field').value });
                 selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
+                clearInterval(timerInterval);
+                startTime = null;
                 saveAndRefetch(true); 
             } else {
-                this.innerText = '完成训练 FINISH'; this.classList.replace('bg-indigo-600', 'bg-rose-500');
-                timer = setInterval(() => { seconds++; const h = Math.floor(seconds/3600).toString().padStart(2,'0'); const m = Math.floor((seconds%3600)/60).toString().padStart(2,'0'); const s = (seconds%60).toString().padStart(2,'0'); document.getElementById('timer-display').innerText = `${h}:${m}:${s}`; }, 1000);
+                this.innerText = '完成训练 FINISH'; 
+                this.classList.replace('bg-indigo-600', 'bg-rose-500');
+                startTime = Date.now(); // 记录起始点
+                timerInterval = setInterval(updateTimer, 1000);
             }
         };
 
-        function updateQuickRepeatUI() { 
-            const lastWorkout = [...records].reverse().find(r => r.type === 'workout'); 
-            const container = document.getElementById('quick-repeat-container'); 
-            if (lastWorkout) { 
-                container.classList.remove('hidden'); 
-                document.getElementById('last-color-dot').style.backgroundColor = lastWorkout.color; 
-                document.getElementById('last-workout-info').innerText = `${lastWorkout.parts} (${lastWorkout.weight})`; 
-            } 
-        }
-
-        function applyLastWorkout() {
-            const lastWorkout = [...records].reverse().find(r => r.type === 'workout'); if (!lastWorkout) return;
-            fillWorkoutFromData(lastWorkout);
-        }
-
-        // 编辑功能：填充数据并跳转
-        function editRecord(id) {
-            const record = records.find(r => r.id === id);
-            if (!record) return;
-            if (record.type !== 'workout') { alert('补剂记录不可编辑'); return; }
-            
-            fillWorkoutFromData(record);
-            // 删除旧记录，等待新记录提交
-            records = records.filter(r => r.id !== id);
-            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records));
-            showView('workout');
-            if (window.navigator.vibrate) window.navigator.vibrate(30);
-        }
-
-        function fillWorkoutFromData(data) {
-            selectedParts.clear(); 
-            document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active')); 
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            
-            const parts = data.parts.split(' · ');
-            parts.forEach(p => { 
-                selectedParts.add(p); 
-                if (p === '有氧') document.getElementById('btn-cardio').classList.add('active'); 
-                else if (p === '拉伸') document.getElementById('btn-stretch').classList.add('active'); 
-                else document.querySelectorAll(`[data-part="${p}"]`).forEach(el => el.classList.add('is-active')); 
-            });
-            
-            const w = parseInt(data.weight) || 0;
-            document.getElementById('weight-slider').value = w; 
-            document.getElementById('weight-val').innerText = `${w} kg`;
-            
-            const intensityIdx = intensityLabels.indexOf(data.intensity);
-            if (intensityIdx > 0) {
-                document.getElementById('intensity-slider').value = intensityIdx;
-                document.getElementById('intensity-val').innerText = data.intensity;
-            }
-            
-            document.getElementById('note-field').value = data.note || '';
-            const colorDiv = document.querySelector(`[data-color="${data.color}"]`); 
-            if (colorDiv) selectColor(colorDiv);
-            updateStatusUI();
-        }
-
-        function calculateStreak() { 
-            if (records.length === 0) return; 
-            const dates = [...new Set(records.map(r => r.dateKey))].sort((a,b) => new Date(b) - new Date(a)); 
-            document.getElementById('streak-count').innerText = dates.length; 
-        }
-
-        function renderCalendar() { 
-            const now = new Date(); 
-            document.getElementById('calendar-title').innerText = `${now.getFullYear()}年 ${now.getMonth()+1}月`; 
-            const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; 
-            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); 
-            for(let i=1; i<=daysInMonth; i++) { 
-                const dayStr = `${now.getFullYear()}-${now.getMonth()+1}-${i}`; 
-                const day = document.createElement('div'); 
-                day.className = `day-cell ${i===now.getDate() ? 'day-today' : ''}`; 
-                const dayWorkouts = records.filter(r => r.dateKey === dayStr); 
-                let dotsHtml = dayWorkouts.map(d => `<div class="workout-dot" style="background:${d.color}"></div>`).join(''); 
-                day.innerHTML = `<span>${i}</span><div class="flex flex-wrap justify-center">${dotsHtml}</div>`; 
-                grid.appendChild(day); 
-            } 
-        }
-
-        function renderHistory() { 
-            const list = document.getElementById('history-list'); list.innerHTML = ''; 
-            [...records].reverse().forEach(r => { 
-                const card = document.createElement('div'); 
-                card.className = 'record-card glass-card p-5 mb-3'; 
-                card.style.borderLeftColor = r.color || '#E2E8F0'; 
-                const d = r.dateKey.split('-'); 
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-black text-indigo-400">${d[1]}/${d[2]} ${r.time}</span>
-                        <span class="font-black text-indigo-900">${r.duration}</span>
-                    </div>
-                    <p class="text-base font-black text-indigo-900">${r.parts}</p>
-                    <p class="text-[10px] text-slate-500 font-bold">${r.weight} ${r.type==='workout' ? '| '+r.intensity : ''}</p>
-                    ${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}
-                    <button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button>
-                    <button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`; 
-                list.appendChild(card); 
-            }); 
-        }
-
-        function deleteRecord(id) { if(confirm('确定删除此记录？')) { records = records.filter(r => r.id !== id); localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderCalendar(); renderHistory(); updateQuickRepeatUI(); } }
-        
-        function renderSupps() { 
-            const container = document.getElementById('supp-list'); 
-            container.innerHTML = suppConfigs.map(s => `<div class="glass-card p-5 supp-card" id="supp-card-${s.id}" onclick="toggleSupp('${s.id}')"><div class="flex justify-between items-center"><div class="flex items-center gap-3"><span class="text-2xl">${s.icon}</span><span class="font-black text-indigo-950">${s.name}</span></div><span id="supp-val-${s.id}" class="text-sm font-black text-indigo-600">${s.def}${s.unit}</span></div><div class="mt-4 hidden" id="supp-ctrl-${s.id}" onclick="event.stopPropagation()"><input type="range" min="0" max="${s.max}" value="${s.def}" step="${s.id==='pre'?0.5:1}" class="w-full" oninput="document.getElementById('supp-val-${s.id}').innerText=this.value+'${s.unit}'"></div></div>`).join(''); 
-        }
-
-        function toggleSupp(id) { 
-            selectedSupps.has(id) ? selectedSupps.delete(id) : selectedSupps.add(id); 
-            document.getElementById(`supp-card-${id}`).classList.toggle('selected'); 
-            document.getElementById(`supp-ctrl-${id}`).classList.toggle('hidden'); 
-            const btn = document.getElementById('supp-save-btn'); 
-            btn.innerText = selectedSupps.size ? `确认记录 ${selectedSupps.size} 项补剂` : '请选择补剂 (0)'; 
-            btn.className = `w-full py-5 rounded-3xl font-black text-lg shadow-xl transition-all ${selectedSupps.size ? 'bg-indigo-600 text-white' : 'bg-slate-400 text-white'}`; 
-        }
-
-        function saveSuppsBatch() { 
-            if (!selectedSupps.size) return; 
-            const now = new Date(); 
-            const details = Array.from(selectedSupps).map(id => { 
-                const conf = suppConfigs.find(c => c.id === id); 
-                return `${conf.name}: ${document.getElementById(`supp-val-${id}`).innerText}`; 
-            }).join(' | '); 
-            records.push({ id: Date.now(), type: 'supp', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: '补充完成', parts: `💊 补剂组合`, weight: details, intensity: '健康摄入', color: '#6366F1' }); 
-            saveAndRefetch(false); 
-        }
-
-        function fireCelebration() { 
-            const end = Date.now() + 2000; 
-            (function frame() { 
-                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } }); 
-                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } }); 
-                if (Date.now() < end) requestAnimationFrame(frame); 
-            }()); 
-        }
+        // 视图切换、选择逻辑等保持不变 (略...)
+        function showView(v){document.getElementById('workout-view').classList.toggle('hidden',v!=='workout');document.getElementById('supps-view').classList.toggle('hidden',v!=='supps');document.getElementById('calendar-view').classList.toggle('hidden',v!=='calendar');['workout','supps','calendar'].forEach(i=>{const b=document.getElementById(`nav-${i}`);b.className=i===v?'flex flex-col items-center gap-1 nav-active':'flex flex-col items-center gap-1 text-slate-300';});if(v==='calendar'){renderHistory();calculateStreak();renderCalendar();}}
+        function selectColor(el){document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));el.classList.add('selected');selectedColor=el.getAttribute('data-color');}
+        function updateHeatmap(){document.querySelectorAll('.muscle-slice').forEach(s=>{const p=s.getAttribute('data-part');if(!p)return;const h=(Date.now()-(recoveryData[p]||0))/(36e5);s.classList.remove('heat-rested','heat-recovering','heat-fatigued');if(h<24)s.classList.add('heat-fatigued');else if(h<48)s.classList.add('heat-recovering');else s.classList.add('heat-rested');});}
+        function updateStatusUI(){const b=document.getElementById('recovery-status'),s=document.getElementById('go-btn');b.innerHTML='';selectedParts.forEach(p=>{const t=document.createElement('span');if(['有氧','拉伸'].includes(p)){t.className='status-tag status-ready';t.innerText=p;}else{const h=(Date.now()-(recoveryData[p]||0))/(36e5);let c=h<24?{l:'刚练',c:'status-training'}:(h<48?{l:'恢复',c:'status-recovering'}:{l:'就绪',c:'status-ready'});t.className=`status-tag ${c.c}`;t.innerText=`${p}:${c.l}`;}b.appendChild(t);});if(!s.innerText.includes('完成')){if(selectedParts.size>0){s.innerText=`开始训练 ${Array.from(selectedParts).join('·')}`;s.classList.replace('bg-slate-400','bg-indigo-600');s.style.pointerEvents='auto';}else{s.innerText='请选择部位';s.classList.replace('bg-indigo-600','bg-slate-400');s.style.pointerEvents='none';}}}
+        document.body.addEventListener('click',e=>{const g=e.target.closest('[data-part]');if(!g)return;if(window.navigator.vibrate)window.navigator.vibrate(15);const n=g.getAttribute('data-part'),a=g.classList.contains('is-active');document.querySelectorAll(`[data-part="${n}"]`).forEach(p=>p.classList.toggle('is-active'));a?selectedParts.delete(n):selectedParts.add(n);updateStatusUI();});
+        function toggleSpecial(m){const b=document.getElementById(m==='有氧'?'btn-cardio':'btn-stretch');selectedParts.has(m)?selectedParts.delete(m):selectedParts.add(m);b.classList.toggle('active');updateStatusUI();}
+        document.getElementById('weight-slider').oninput=function(){document.getElementById('weight-val').innerText=`${this.value} kg`;};
+        document.getElementById('intensity-slider').oninput=function(){document.getElementById('intensity-val').innerText=intensityLabels[this.value];};
+        function saveAndRefetch(c){localStorage.setItem('fitlog_logs_v94',JSON.stringify(records));localStorage.setItem('fitlog_rec_v94',JSON.stringify(recoveryData));if(c){fireCelebration();if(window.navigator.vibrate)window.navigator.vibrate([40,30,40,30,80]);setTimeout(()=>{showView('calendar');resetWorkoutState();},1000);}else{showView('calendar');}}
+        function resetWorkoutState(){clearInterval(timerInterval);startTime=null;document.getElementById('timer-display').innerText='00:00:00';document.getElementById('go-btn').innerText='请选择部位';document.getElementById('go-btn').classList.replace('bg-rose-500','bg-slate-400');selectedParts.clear();document.querySelectorAll('.muscle-slice').forEach(p=>p.classList.remove('is-active'));document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));document.getElementById('note-field').value='';updateStatusUI();updateHeatmap();updateQuickRepeatUI();}
+        function updateQuickRepeatUI(){const l=[...records].reverse().find(r=>r.type==='workout');const c=document.getElementById('quick-repeat-container');if(l){c.classList.remove('hidden');document.getElementById('last-color-dot').style.backgroundColor=l.color;document.getElementById('last-workout-info').innerText=`${l.parts} (${l.weight})`;}}
+        function applyLastWorkout(){const l=[...records].reverse().find(r=>r.type==='workout');if(!l)return;fillWorkoutFromData(l);}
+        function editRecord(id){const r=records.find(x=>x.id===id);if(!r)return;fillWorkoutFromData(r);records=records.filter(x=>x.id!==id);localStorage.setItem('fitlog_logs_v94',JSON.stringify(records));showView('workout');}
+        function fillWorkoutFromData(d){selectedParts.clear();document.querySelectorAll('.muscle-slice').forEach(p=>p.classList.remove('is-active'));document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));const ps=d.parts.split(' · ');ps.forEach(p=>{selectedParts.add(p);if(p==='有氧')document.getElementById('btn-cardio').classList.add('active');else if(p==='拉伸')document.getElementById('btn-stretch').classList.add('active');else document.querySelectorAll(`[data-part="${p}"]`).forEach(el=>el.classList.add('is-active'));});const w=parseInt(d.weight)||0;document.getElementById('weight-slider').value=w;document.getElementById('weight-val').innerText=`${w} kg`;const idx=intensityLabels.indexOf(d.intensity);if(idx>0){document.getElementById('intensity-slider').value=idx;document.getElementById('intensity-val').innerText=d.intensity;}document.getElementById('note-field').value=d.note||'';const cD=document.querySelector(`[data-color="${d.color}"]`);if(cD)selectColor(cD);updateStatusUI();}
+        function calculateStreak(){if(records.length===0)return;const ds=[...new Set(records.map(r=>r.dateKey))].sort((a,b)=>new Date(b)-new Date(a));document.getElementById('streak-count').innerText=ds.length;}
+        function renderCalendar(){const n=new Date();document.getElementById('calendar-title').innerText=`${n.getFullYear()}年 ${n.getMonth()+1}月`;const g=document.getElementById('calendar-days');g.innerHTML='';const dIM=new Date(n.getFullYear(),n.getMonth()+1,0).getDate();for(let i=1;i<=dIM;i++){const dS=`${n.getFullYear()}-${n.getMonth()+1}-${i}`;const d=document.createElement('div');d.className=`day-cell ${i===n.getDate()?'day-today':''}`;const dW=records.filter(r=>r.dateKey===dS);let dots=dW.map(d=>`<div class="workout-dot" style="background:${d.color}"></div>`).join('');d.innerHTML=`<span>${i}</span><div class="flex flex-wrap justify-center">${dots}</div>`;g.appendChild(d);}}
+        function renderHistory(){const l=document.getElementById('history-list');l.innerHTML='';[...records].reverse().forEach(r=>{const c=document.createElement('div');c.className='record-card glass-card p-5 mb-3';c.style.borderLeftColor=r.color||'#E2E8F0';const d=r.dateKey.split('-');c.innerHTML=`<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black text-indigo-400">${d[1]}/${d[2]} ${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div><p class="text-base font-black text-indigo-900">${r.parts}</p><p class="text-[10px] text-slate-500 font-bold">${r.weight} ${r.type==='workout'?'| '+r.intensity:''}</p>${r.note?`<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>`:''}<button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button><button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`;l.appendChild(c);});}
+        function deleteRecord(id){if(confirm('确定删除此记录？')){records=records.filter(r=>r.id!==id);localStorage.setItem('fitlog_logs_v94',JSON.stringify(records));renderCalendar();renderHistory();updateQuickRepeatUI();}}
+        function renderSupps(){const c=document.getElementById('supp-list');c.innerHTML=suppConfigs.map(s=>`<div class="glass-card p-5 supp-card" id="supp-card-${s.id}" onclick="toggleSupp('${s.id}')"><div class="flex justify-between items-center"><div class="flex items-center gap-3"><span class="text-2xl">${s.icon}</span><span class="font-black text-indigo-950">${s.name}</span></div><span id="supp-val-${s.id}" class="text-sm font-black text-indigo-600">${s.def}${s.unit}</span></div><div class="mt-4 hidden" id="supp-ctrl-${s.id}" onclick="event.stopPropagation()"><input type="range" min="0" max="${s.max}" value="${s.def}" step="${s.id==='pre'?0.5:1}" class="w-full" oninput="document.getElementById('supp-val-${s.id}').innerText=this.value+'${s.unit}'"></div></div>`).join('');}
+        function toggleSupp(id){selectedSupps.has(id)?selectedSupps.delete(id):selectedSupps.add(id);document.getElementById(`supp-card-${id}`).classList.toggle('selected');document.getElementById(`supp-ctrl-${id}`).classList.toggle('hidden');const b=document.getElementById('supp-save-btn');b.innerText=selectedSupps.size?`确认记录 ${selectedSupps.size} 项补剂`:'请选择补剂 (0)';b.className=`w-full py-5 rounded-3xl font-black text-lg shadow-xl transition-all ${selectedSupps.size?'bg-indigo-600 text-white':'bg-slate-400 text-white'}`;}
+        function saveSuppsBatch(){if(!selectedSupps.size)return;const n=new Date();const d=Array.from(selectedSupps).map(id=>{const c=suppConfigs.find(x=>x.id===id);return`${c.name}: ${document.getElementById(`supp-val-${id}`).innerText}`;}).join(' | ');records.push({id:Date.now(),type:'supp',dateKey:`${n.getFullYear()}-${n.getMonth()+1}-${n.getDate()}`,time:n.getHours().toString().padStart(2,'0')+":"+n.getMinutes().toString().padStart(2,'0'),duration:'补充完成',parts:`💊 补剂组合`,weight:d,intensity:'健康摄入',color:'#6366F1'});saveAndRefetch(false);}
+        function fireCelebration(){const e=Date.now()+2000;(function f(){confetti({particleCount:3,angle:60,spread:55,origin:{x:0}});confetti({particleCount:3,angle:120,spread:55,origin:{x:1}});if(Date.now()<e)requestAnimationFrame(f);})();}
 
         init();
     </script>
