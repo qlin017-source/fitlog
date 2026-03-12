@@ -9,36 +9,35 @@
     <title>FitLog⚡️</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-     :root { 
+        /* 🎨 调色盘更新：rested 为灰，fatigued 为淡红 */
+        :root { 
             --bg-main: #EDF2FF; 
             --brand-main: #6366F1; 
-            
-            /* 状态颜色定义 */
-            --rested: #F1F5F9;      /* 已就绪：淡淡的灰蓝 (Tailwind slate-100) */
-            --recovering: #FED7AA;  /* 恢复中：透亮的浅橙 (Tailwind orange-200) */
-            --fatigued: #FECACA;    /* 刚练完：直观的淡红 (Tailwind red-200) */
-            
-            --active: #FB7185; 
+            --rested: #F1F5F9;      /* 就绪：淡灰色 */
+            --recovering: #FED7AA;  /* 恢复：淡橙色 */
+            --fatigued: #FECACA;    /* 刚练：淡红色 */
+            --active: #60A5FA;      /* 选中：清爽蓝 */
         }
-
-        /* 统一描边和过渡动画 */
-        .muscle-slice { 
-            stroke: #FFF; 
-            stroke-width: 1.2; 
-            transition: all 0.4s ease-in-out; 
-            cursor: pointer; 
-        }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+        input, textarea { -webkit-user-select: auto; user-select: auto; }
+        body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; padding-top: env(safe-area-inset-top); margin: 0; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,1); border-radius: 32px; box-shadow: 0 15px 35px rgba(79, 70, 229, 0.08); }
         
-        /* 填充对应的颜色变量 */
+        /* 肌肉切片基础样式 */
+        .muscle-slice { stroke: #FFF; stroke-width: 1.2; transition: all 0.4s ease; cursor: pointer; }
+        .no-click { cursor: default; pointer-events: none; opacity: 0.6; } 
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
-    .is-active, .is-active path, .is-active rect, .is-active circle { 
-            fill: #60A5FA !important; /* 蓝色填充 (Tailwind blue-400) */
-            stroke: #93C5FD;        /* 极淡的蓝色描边，增加层次 */
+
+        /* 🔵 激活态：蓝色发光，去掉黑边 */
+        .is-active, .is-active path, .is-active rect, .is-active circle { 
+            fill: var(--active) !important; 
+            stroke: #93C5FD !important;
             stroke-width: 1; 
-            filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.6)); /* 蓝色发光 */
+            filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.6)); 
         }
+
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
         .status-ready { background: #F1F5F9; color: #64748B; }
         .status-recovering { background: #FEF3C7; color: #92400E; }
@@ -53,217 +52,4 @@
         .day-today { background: var(--brand-main) !important; color: white !important; }
         .workout-dot { width: 4px; height: 4px; border-radius: 50%; margin: 1px; }
         .record-card { border-left: 8px solid transparent; position: relative; }
-        .action-btn { position: absolute; bottom: 14px; font-size: 18px; padding: 4px; transition: all 0.2s; cursor: pointer; }
-        .delete-btn { right: 16px; color: #CBD5E1; }
-        .edit-btn { right: 48px; color: #CBD5E1; }
-        #color-palette div { cursor: pointer; pointer-events: auto !important; }
-    </style>
-</head>
-<body>
-    <div id="workout-view" class="flex flex-col min-h-screen px-6 pb-32 text-center">
-        <header class="pt-8 pb-4">
-            <h1 class="text-4xl font-black tracking-tighter italic text-indigo-950 text-center">Fitlog<span class="text-rose-500">.</span></h1>
-        </header>
-
-        <main class="flex-1 flex flex-col justify-center max-w-md mx-auto w-full space-y-4">
-            <section class="glass-card p-6 flex flex-col items-center shadow-sm min-h-[480px]">
-                <div class="flex justify-around items-start w-full mt-6 mb-2">
-                    <div class="flex-1 flex flex-col items-center">
-                        <span class="text-[10px] font-black text-slate-300 mb-2 uppercase">Front</span>
-                        <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
-                            <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" /> 
-                            <circle data-part="肩膀" cx="31" cy="29" r="7" class="muscle-slice heat-rested" />
-                            <circle data-part="肩膀" cx="69" cy="29" r="7" class="muscle-slice heat-rested" />
-                            <path data-part="胸部" d="M36 32 a14 14 0 0 1 28 0 v4 h-28 z" class="muscle-slice heat-rested" />
-                            <g data-part="核心"><rect x="41" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="44" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="41" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="53" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="41" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" /><rect x="51" y="62" width="8" height="7" rx="2" class="muscle-slice heat-rested" /></g>
-                            <rect data-part="大臂" x="18" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" /><rect data-part="大臂" x="73" y="37" width="9" height="18" rx="4.5" class="muscle-slice heat-rested" />
-                            <rect data-part="小臂" x="15" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" /><rect data-part="小臂" x="77" y="58" width="8" height="16" rx="4" class="muscle-slice heat-rested" />
-                            <rect data-part="大腿" x="38" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" /><rect data-part="大腿" x="51" y="76" width="11" height="26" rx="5.5" class="muscle-slice heat-rested" />
-                            <rect data-part="小腿" x="39" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" /><rect data-part="小腿" x="52" y="105" width="9" height="22" rx="4.5" class="muscle-slice heat-rested" />
-                        </svg>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center">
-                        <span class="text-[10px] font-black text-slate-300 mb-2 uppercase">Back</span>
-                        <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
-                            <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" />
-                            <path data-part="背部" d="M28 28 q22 -6 44 0 l-4 16 h-36 z" class="muscle-slice heat-rested" />
-                            <g data-part="臀部"><circle cx="43" cy="64" r="11" class="muscle-slice heat-rested" /><circle cx="57" cy="64" r="11" class="muscle-slice heat-rested" /></g>
-                            <rect data-part="大腿" x="40" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" /><rect data-part="大腿" x="50" y="78" width="10" height="25" rx="5" class="muscle-slice heat-rested" />
-                            <rect data-part="小腿" x="41" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" /><rect data-part="小腿" x="51" y="105" width="8" height="22" rx="4" class="muscle-slice heat-rested" />
-                        </svg>
-                    </div>
-                </div>
-                <div id="recovery-status" class="flex flex-wrap justify-center gap-1 min-h-[22px] mb-4"></div>
-                <div class="flex gap-3 w-full mt-4">
-                    <button id="btn-cardio" onclick="toggleSpecial('有氧')" class="mode-btn flex-1 py-3 shadow-sm">🏃 有氧</button>
-                    <button id="btn-stretch" onclick="toggleSpecial('拉伸')" class="mode-btn flex-1 py-3 shadow-sm">🧘 拉伸</button>
-                </div>
-                <button id="go-btn" class="w-full mt-3 bg-slate-400 text-white py-5 px-6 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">请选择部位</button>
-            </section>
-
-            <section class="glass-card p-6 space-y-6 text-left shadow-sm">
-                <div class="flex justify-between items-center">
-                    <div><p class="text-[10px] font-black text-slate-400 uppercase">Duration</p><h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3></div>
-                    <div class="flex flex-wrap justify-end gap-1.5" id="color-palette" style="max-width:120px">
-                        <div class="w-5 h-5 rounded-full bg-indigo-950 ring-2 ring-indigo-400" data-color="#1E1B4B" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-white border ring-1 ring-transparent" data-color="#FFFFFF" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-rose-500 ring-1 ring-transparent" data-color="#F43F5E" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-emerald-500 ring-1 ring-transparent" data-color="#10B981" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-sky-500 ring-1 ring-transparent" data-color="#0EA5E9" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-orange-400 ring-1 ring-transparent" data-color="#FB923C" onclick="selectColor(this)"></div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <div class="flex justify-between"><p class="text-[10px] font-black text-indigo-900 uppercase">Weight</p><span id="weight-val" class="text-xs font-black text-rose-500">2 kg</span></div>
-                        <input type="range" id="weight-slider" min="0" max="100" step="2" value="2" class="w-full">
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between"><p class="text-[10px] font-black text-indigo-900 uppercase">Intensity</p><span id="intensity-val" class="text-xs font-black text-indigo-500">轻松自如</span></div>
-                        <input type="range" id="intensity-slider" min="1" max="5" value="1" class="w-full">
-                    </div>
-                </div>
-                <textarea id="note-field" rows="1" placeholder="训练心得..." class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm outline-none"></textarea>
-            </section>
-        </main>
-    </div>
-
-    <div id="calendar-view" class="px-6 pt-12 pb-32 hidden">
-        <header class="text-center mb-6"><h2 class="text-xl font-black text-indigo-900 uppercase">训练记录</h2></header>
-        <div class="max-w-md mx-auto space-y-6">
-            <div class="glass-card p-5 shadow-sm">
-                <p class="text-center font-black mb-3 text-xs text-slate-400" id="calendar-title"></p>
-                <div class="calendar-grid" id="calendar-days"></div>
-            </div>
-            <div id="history-list" class="space-y-4"></div>
-        </div>
-    </div>
-
-    <nav class="fixed bottom-6 left-8 right-8 h-18 glass-card flex items-center justify-around px-6 z-50 shadow-2xl">
-        <button onclick="showView('workout')" id="nav-workout" class="flex flex-col items-center gap-1 nav-active"><span class="text-xl">⚡</span><span class="text-[10px] font-black uppercase">训练</span></button>
-        <button onclick="showView('calendar')" id="nav-calendar" class="flex flex-col items-center gap-1 text-slate-300"><span class="text-xl">📅</span><span class="text-[10px] font-black uppercase">记录</span></button>
-    </nav>
-
-    <script>
-        let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v94')) || {};
-        let records = JSON.parse(localStorage.getItem('fitlog_logs_v94')) || [];
-        let selectedParts = new Set();
-        let selectedColor = '#1E1B4B';
-        let timer, seconds = 0;
-        const intensityLabels = ["", "轻松自如", "微微出汗", "呼吸急促", "肌肉酸胀", "力竭边缘"];
-
-        function init() { renderCalendar(); updateHeatmap(); renderHistory(); updateStatusUI(); }
-        function selectColor(el) { document.querySelectorAll('#color-palette div').forEach(d => d.classList.remove('ring-indigo-400','ring-2','scale-110')); el.classList.add('ring-indigo-400','ring-2','scale-110'); selectedColor = el.getAttribute('data-color'); }
-        function updateHeatmap() { document.querySelectorAll('.muscle-slice').forEach(slice => { const part = slice.getAttribute('data-part'); if (!part) return; const hrs = (Date.now() - (recoveryData[part] || 0)) / (1000 * 60 * 60); slice.classList.remove('heat-rested', 'heat-recovering', 'heat-fatigued'); if (hrs < 24) slice.classList.add('heat-fatigued'); else if (hrs < 48) slice.classList.add('heat-recovering'); else slice.classList.add('heat-rested'); }); }
-        
-        function updateStatusUI() {
-            const statusBox = document.getElementById('recovery-status'); const startBtn = document.getElementById('go-btn'); statusBox.innerHTML = '';
-            if (selectedParts.size > 0) {
-                selectedParts.forEach(p => { const tag = document.createElement('span'); if(['有氧','拉伸'].includes(p)) { tag.className = 'status-tag status-ready'; tag.innerText = p; } else { const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60); let cfg = hrs < 24 ? {l:'刚练', c:'status-training'} : (hrs < 48 ? {l:'恢复', c:'status-recovering'} : {l:'就绪', c:'status-ready'}); tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}:${cfg.l}`; } statusBox.appendChild(tag); });
-                if (!startBtn.innerText.includes('FINISH')) { startBtn.innerText = `开始训练 ${Array.from(selectedParts).join('·')}`; startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); startBtn.style.pointerEvents = 'auto'; }
-            } else { if (!startBtn.innerText.includes('FINISH')) { startBtn.innerText = '请选择部位'; startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); startBtn.style.pointerEvents = 'none'; } }
-        }
-
-        document.body.addEventListener('click', (e) => {
-            // 向上寻找最近的带有 data-part 属性的元素（包括组 g）
-            const group = e.target.closest('[data-part]'); 
-            if (!group) return;
-
-            const partName = group.getAttribute('data-part');
-            // 找到所有同名的部位（处理 Front 和 Back 同步）
-            const pieces = document.querySelectorAll(`[data-part="${partName}"]`);
-            
-            // 检查当前是否已选中
-            const isActive = group.classList.contains('is-active');
-
-            pieces.forEach(p => {
-                if (isActive) {
-                    p.classList.remove('is-active');
-                } else {
-                    p.classList.add('is-active');
-                }
-            });
-
-            if (isActive) {
-                selectedParts.delete(partName);
-            } else {
-                selectedParts.add(partName);
-            }
-            updateStatusUI();
-        });        function toggleSpecial(mode) { const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch'); selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode); btn.classList.toggle('active'); updateStatusUI(); }
-
-        document.getElementById('weight-slider').oninput = function() { document.getElementById('weight-val').innerText = `${this.value} kg`; };
-        document.getElementById('intensity-slider').oninput = function() { document.getElementById('intensity-val').innerText = intensityLabels[this.value]; };
-
-        document.getElementById('go-btn').onclick = function() {
-            if (this.innerText.includes('FINISH')) {
-                const now = new Date();
-                records.push({ id: Date.now(), dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: document.getElementById('timer-display').innerText, parts: Array.from(selectedParts).join(' · '), weight: document.getElementById('weight-val').innerText, intensity: document.getElementById('intensity-val').innerText, color: selectedColor, note: document.getElementById('note-field').value });
-                selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
-                localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
-                location.reload(); 
-            } else {
-                this.innerText = '完成训练 FINISH'; this.classList.replace('bg-indigo-600', 'bg-rose-500');
-                timer = setInterval(() => { seconds++; const h = Math.floor(seconds/3600).toString().padStart(2,'0'); const m = Math.floor((seconds%3600)/60).toString().padStart(2,'0'); const s = (seconds%60).toString().padStart(2,'0'); document.getElementById('timer-display').innerText = `${h}:${m}:${s}`; }, 1000);
-            }
-        };
-
-        function showView(view) { document.getElementById('workout-view').classList.toggle('hidden', view === 'calendar'); document.getElementById('calendar-view').classList.toggle('hidden', view === 'workout'); document.getElementById('nav-workout').classList.toggle('nav-active', view === 'workout'); document.getElementById('nav-calendar').classList.toggle('nav-active', view === 'calendar'); }
-        function renderCalendar() { const now = new Date(); document.getElementById('calendar-title').innerText = `${now.getFullYear()}年 ${now.getMonth()+1}月`; const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); for(let i=1; i<=daysInMonth; i++) { const dayStr = `${now.getFullYear()}-${now.getMonth()+1}-${i}`; const day = document.createElement('div'); day.className = `day-cell ${i===now.getDate() ? 'day-today' : ''}`; const dayWorkouts = records.filter(r => r.dateKey === dayStr); let dotsHtml = dayWorkouts.map(d => `<div class="workout-dot" style="background:${d.color}"></div>`).join(''); day.innerHTML = `<span>${i}</span><div class="flex flex-wrap justify-center">${dotsHtml}</div>`; grid.appendChild(day); } }
-        
-       function renderHistory() {
-            const list = document.getElementById('history-list'); list.innerHTML = '';
-            [...records].reverse().forEach(r => {
-                const card = document.createElement('div');
-                card.className = 'record-card glass-card p-5 mb-3';
-                card.style.borderLeftColor = (r.color === '#FFFFFF' || !r.color) ? '#E2E8F0' : r.color;
-                
-                const d = r.dateKey ? r.dateKey.split('-') : [];
-                const dateShow = d.length === 3 ? `${d[1]}/${d[2]}` : '';
-
-                // 确保重量显示始终带有 kg
-                const displayWeight = r.weight.includes('kg') ? r.weight : `${r.weight} kg`;
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-black text-indigo-400">${dateShow} ${r.time}</span>
-                        <span class="font-black text-indigo-900">${r.duration}</span>
-                    </div>
-                    <p class="text-base font-black text-indigo-900">${r.parts}</p>
-                    <p class="text-[10px] text-slate-500 font-bold">${displayWeight} | ${r.intensity}</p>
-                    ${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}
-                    <button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button>
-                    <button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`;
-                list.appendChild(card);
-            });
-        }
-
-        function editRecord(id) {
-            const r = records.find(rec => rec.id === id);
-            if (!r) return;
-
-            // 1. 修改备注
-            const nNote = prompt("修改备注:", r.note || "");
-            if (nNote !== null) r.note = nNote;
-
-            // 2. 修改负重 (自动处理 kg 单位)
-            const currentW = r.weight.toString().replace(" kg", "");
-            const nWeight = prompt("修改负重 (kg):", currentW);
-            if (nWeight !== null && nWeight !== "") {
-                r.weight = nWeight.includes("kg") ? nWeight : `${nWeight} kg`;
-            }
-
-            // 3. 修改程度词
-            const nInt = prompt("修改程度 (轻松自如/微微出汗/呼吸急促/肌肉酸胀/力竭边缘):", r.intensity);
-            if (nInt !== null) r.intensity = nInt;
-
-            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records));
-            renderHistory();
-            renderCalendar(); // 同步更新日历打点（如果未来需要显示重量）
-        }
-
-        function deleteRecord(id) { if(confirm('确定删除此记录？')) { records = records.filter(r => r.id !== id); localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); init(); } }
-        init();
-    </script>
-</body>
-</html>
+        .action-btn { position: absolute; bottom: 14px; font-size: 18px; padding: 4px; transition: all 0.2
