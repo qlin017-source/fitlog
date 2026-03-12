@@ -58,6 +58,9 @@
         .action-btn { position: absolute; bottom: 14px; font-size: 18px; padding: 4px; color: #CBD5E1; }
         .delete-btn { right: 16px; }
         .edit-btn { right: 48px; }
+
+        .supp-card { transition: all 0.3s; border: 2px solid transparent; }
+        .supp-card.selected { border-color: var(--brand-main); background: #F8FAFF; }
     </style>
 </head>
 <body>
@@ -117,7 +120,7 @@
             <section class="glass-card p-6 space-y-6 text-left">
                 <div class="flex justify-between items-center">
                     <div><p class="text-[10px] font-black text-slate-400 uppercase">时长</p><h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3></div>
-                    <div class="flex flex-wrap justify-end gap-1.5" id="color-palette" style="max-width:120px">
+                    <div id="color-palette" class="flex flex-wrap justify-end gap-1.5" style="max-width:120px">
                         <div class="w-5 h-5 rounded-full bg-indigo-950 ring-2 ring-indigo-400" data-color="#1E1B4B" onclick="selectColor(this)"></div>
                         <div class="w-5 h-5 rounded-full bg-white border ring-1 ring-transparent" data-color="#FFFFFF" onclick="selectColor(this)"></div>
                         <div class="w-5 h-5 rounded-full bg-rose-500 ring-1 ring-transparent" data-color="#F43F5E" onclick="selectColor(this)"></div>
@@ -141,10 +144,13 @@
         </main>
     </div>
 
-    <nav class="fixed bottom-8 left-8 right-8 h-20 glass-card flex items-center justify-around px-6 z-50">
-        <button onclick="showView('workout')" id="nav-workout" class="flex flex-col items-center gap-1 nav-active"><span class="text-xl">⚡</span><span class="text-[10px] font-black uppercase">训练</span></button>
-        <button onclick="showView('calendar')" id="nav-calendar" class="flex flex-col items-center gap-1 text-slate-300"><span class="text-xl">📅</span><span class="text-[10px] font-black uppercase">历史</span></button>
-    </nav>
+    <div id="supps-view" class="px-6 pt-12 pb-40 hidden">
+        <header class="text-center mb-8"><h2 class="text-2xl font-black text-indigo-950 italic">Supplements<span class="text-rose-500">.</span></h2></header>
+        <main class="max-w-md mx-auto space-y-4" id="supp-list"></main>
+        <div class="fixed bottom-32 left-8 right-8">
+            <button id="supp-save-btn" onclick="saveSuppsBatch()" class="w-full bg-slate-400 text-white py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">请选择补剂 (0)</button>
+        </div>
+    </div>
 
     <div id="calendar-view" class="px-6 pt-12 pb-32 hidden">
         <header class="text-center mb-8"><h2 class="text-xl font-black text-indigo-900 uppercase">训练月历</h2></header>
@@ -157,15 +163,46 @@
         </div>
     </div>
 
+    <nav class="fixed bottom-8 left-8 right-8 h-20 glass-card flex items-center justify-around px-6 z-50">
+        <button onclick="showView('workout')" id="nav-workout" class="flex flex-col items-center gap-1 nav-active"><span class="text-xl">⚡</span><span class="text-[10px] font-black uppercase">训练</span></button>
+        <button onclick="showView('supps')" id="nav-supps" class="flex flex-col items-center gap-1 text-slate-300"><span class="text-xl">💊</span><span class="text-[10px] font-black uppercase">补剂</span></button>
+        <button onclick="showView('calendar')" id="nav-calendar" class="flex flex-col items-center gap-1 text-slate-300"><span class="text-xl">📅</span><span class="text-[10px] font-black uppercase">历史</span></button>
+    </nav>
+
     <script>
         let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v94')) || {};
         let records = JSON.parse(localStorage.getItem('fitlog_logs_v94')) || [];
         let selectedParts = new Set();
+        let selectedSupps = new Set();
         let selectedColor = '#1E1B4B';
         let timer, seconds = 0;
         const intensityLabels = ["", "轻松自如", "微微出汗", "呼吸急促", "肌肉酸胀", "力竭边缘"];
 
-        function init() { renderCalendar(); updateHeatmap(); renderHistory(); updateStatusUI(); }
+        const suppConfigs = [
+            { id: 'pro', name: '蛋白粉', icon: '🍗', unit: 'g', max: 60, def: 30 },
+            { id: 'cre', name: '肌酸', icon: '⚡', unit: 'g', max: 10, def: 5 },
+            { id: 'pre', name: '氮泵', icon: '🔥', unit: '勺', max: 2, def: 1 },
+            { id: 'fish', name: '鱼油', icon: '🐟', unit: '粒', max: 4, def: 2 }
+        ];
+
+        function init() { 
+            renderCalendar(); 
+            updateHeatmap(); 
+            renderSupps();
+            updateStatusUI(); 
+        }
+
+        function showView(view) {
+            document.getElementById('workout-view').classList.toggle('hidden', view !== 'workout');
+            document.getElementById('supps-view').classList.toggle('hidden', view !== 'supps');
+            document.getElementById('calendar-view').classList.toggle('hidden', view !== 'calendar');
+            document.getElementById('nav-workout').className = `flex flex-col items-center gap-1 ${view === 'workout' ? 'nav-active' : 'text-slate-300'}`;
+            document.getElementById('nav-supps').className = `flex flex-col items-center gap-1 ${view === 'supps' ? 'nav-active' : 'text-slate-300'}`;
+            document.getElementById('nav-calendar').className = `flex flex-col items-center gap-1 ${view === 'calendar' ? 'nav-active' : 'text-slate-300'}`;
+            if (view === 'calendar') renderHistory();
+        }
+
+        // --- 训练逻辑 ---
         function selectColor(el) { 
             document.querySelectorAll('#color-palette div').forEach(d => d.classList.remove('ring-indigo-400','ring-2','scale-110')); 
             el.classList.add('ring-indigo-400','ring-2','scale-110'); 
@@ -180,38 +217,45 @@
                 if (hrs < 24) slice.classList.add('heat-fatigued'); else if (hrs < 48) slice.classList.add('heat-recovering'); else slice.classList.add('heat-rested'); 
             }); 
         }
-        
+
         function updateStatusUI() {
             const statusBox = document.getElementById('recovery-status'); const startBtn = document.getElementById('go-btn'); statusBox.innerHTML = '';
-            if (selectedParts.size > 0) {
-                selectedParts.forEach(p => { 
-                    const tag = document.createElement('span'); 
-                    if(['有氧','拉伸'].includes(p)) { tag.className = 'status-tag status-ready'; tag.innerText = p; } 
-                    else { 
-                        const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60); 
-                        let cfg = hrs < 24 ? {l:'刚练', c:'status-training'} : (hrs < 48 ? {l:'恢复', c:'status-recovering'} : {l:'就绪', c:'status-ready'}); 
-                        tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}:${cfg.l}`; 
-                    } statusBox.appendChild(tag); 
-                });
-                if (!startBtn.innerText.includes('FINISH')) { startBtn.innerText = `开始训练 ${Array.from(selectedParts).join('·')}`; startBtn.classList.replace('bg-slate-400', 'bg-indigo-600'); startBtn.style.pointerEvents = 'auto'; }
-            } else { if (!startBtn.innerText.includes('FINISH')) { startBtn.innerText = '请选择部位'; startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); startBtn.style.pointerEvents = 'none'; } }
+            selectedParts.forEach(p => { 
+                const tag = document.createElement('span'); 
+                if(['有氧','拉伸'].includes(p)) { tag.className = 'status-tag status-ready'; tag.innerText = p; } 
+                else { 
+                    const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60); 
+                    let cfg = hrs < 24 ? {l:'刚练', c:'status-training'} : (hrs < 48 ? {l:'恢复', c:'status-recovering'} : {l:'就绪', c:'status-ready'}); 
+                    tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}:${cfg.l}`; 
+                } statusBox.appendChild(tag); 
+            });
+            if (!startBtn.innerText.includes('FINISH')) {
+                if (selectedParts.size > 0) {
+                    startBtn.innerText = `开始训练 ${Array.from(selectedParts).join('·')}`; 
+                    startBtn.classList.replace('bg-slate-400', 'bg-indigo-600');
+                    startBtn.style.pointerEvents = 'auto';
+                } else {
+                    startBtn.innerText = '请选择部位'; 
+                    startBtn.classList.replace('bg-indigo-600', 'bg-slate-400');
+                    startBtn.style.pointerEvents = 'none';
+                }
+            }
         }
 
         document.body.addEventListener('click', (e) => {
             const group = e.target.closest('[data-part]'); if (!group) return;
-            if (window.navigator.vibrate) window.navigator.vibrate(15);
             const partName = group.getAttribute('data-part');
             const pieces = document.querySelectorAll(`[data-part="${partName}"]`);
             const isActive = group.classList.contains('is-active');
-            pieces.forEach(p => { if (isActive) p.classList.remove('is-active'); else p.classList.add('is-active'); });
-            if (isActive) selectedParts.delete(partName); else selectedParts.add(partName);
+            pieces.forEach(p => p.classList.toggle('is-active'));
+            isActive ? selectedParts.delete(partName) : selectedParts.add(partName);
             updateStatusUI();
         });
 
         function toggleSpecial(mode) { 
             const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch'); 
             selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode); 
-            btn.classList.toggle('active'); if (window.navigator.vibrate) window.navigator.vibrate(15);
+            btn.classList.toggle('active');
             updateStatusUI(); 
         }
 
@@ -220,54 +264,85 @@
 
         document.getElementById('go-btn').onclick = function() {
             if (this.innerText.includes('FINISH')) {
-                // 保存数据逻辑
                 const now = new Date();
-                records.push({ id: Date.now(), dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: document.getElementById('timer-display').innerText, parts: Array.from(selectedParts).join(' · '), weight: document.getElementById('weight-val').innerText, intensity: document.getElementById('intensity-val').innerText, color: selectedColor, note: document.getElementById('note-field').value });
+                records.push({ id: Date.now(), type: 'workout', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: document.getElementById('timer-display').innerText, parts: Array.from(selectedParts).join(' · '), weight: document.getElementById('weight-val').innerText, intensity: document.getElementById('intensity-val').innerText, color: selectedColor, note: document.getElementById('note-field').value });
                 selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
-                localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); 
-                localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
-                
-                // 🎊 庆祝反馈
-                fireCelebration();
-                if (window.navigator.vibrate) window.navigator.vibrate([40, 30, 40, 30, 80]);
-
-                // ⏳ 延时跳转
-                setTimeout(() => {
-                    init(); 
-                    showView('calendar'); // 跳转到月历
-                    this.innerText = '请选择部位';
-                    this.classList.replace('bg-rose-500', 'bg-slate-400');
-                    document.getElementById('timer-display').innerText = "00:00:00";
-                    seconds = 0; clearInterval(timer);
-                    selectedParts.clear();
-                    document.querySelectorAll('.is-active').forEach(p => p.classList.remove('is-active'));
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    updateStatusUI();
-                    updateHeatmap();
-                }, 1000);
+                saveAndRefetch();
             } else {
-                if (window.navigator.vibrate) window.navigator.vibrate(30);
                 this.innerText = '完成训练 FINISH'; this.classList.replace('bg-indigo-600', 'bg-rose-500');
                 timer = setInterval(() => { seconds++; const h = Math.floor(seconds/3600).toString().padStart(2,'0'); const m = Math.floor((seconds%3600)/60).toString().padStart(2,'0'); const s = (seconds%60).toString().padStart(2,'0'); document.getElementById('timer-display').innerText = `${h}:${m}:${s}`; }, 1000);
             }
         };
 
+        // --- 补剂逻辑 (核心修改：合并记录) ---
+        function renderSupps() {
+            const container = document.getElementById('supp-list');
+            container.innerHTML = suppConfigs.map(s => `
+                <div class="glass-card p-5 supp-card" id="supp-card-${s.id}" onclick="toggleSupp('${s.id}')">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${s.icon}</span>
+                            <span class="font-black text-indigo-950">${s.name}</span>
+                        </div>
+                        <span id="supp-val-${s.id}" class="text-sm font-black text-indigo-600">${s.def}${s.unit}</span>
+                    </div>
+                    <div class="mt-4 hidden" id="supp-ctrl-${s.id}" onclick="event.stopPropagation()">
+                        <input type="range" min="0" max="${s.max}" value="${s.def}" step="${s.id==='pre'?0.5:1}" class="w-full" 
+                               oninput="document.getElementById('supp-val-${s.id}').innerText=this.value+'${s.unit}'">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleSupp(id) {
+            selectedSupps.has(id) ? selectedSupps.delete(id) : selectedSupps.add(id);
+            document.getElementById(`supp-card-${id}`).classList.toggle('selected');
+            document.getElementById(`supp-ctrl-${id}`).classList.toggle('hidden');
+            const btn = document.getElementById('supp-save-btn');
+            btn.innerText = selectedSupps.size ? `确认记录 ${selectedSupps.size} 项补剂` : '请选择补剂 (0)';
+            btn.className = `w-full py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all ${selectedSupps.size ? 'bg-indigo-600 text-white' : 'bg-slate-400 text-white'}`;
+        }
+
+        function saveSuppsBatch() {
+            if (!selectedSupps.size) return;
+            const now = new Date();
+            // 合并选中的补剂信息到一个对象中
+            const details = Array.from(selectedSupps).map(id => {
+                const conf = suppConfigs.find(c => c.id === id);
+                const val = document.getElementById(`supp-val-${id}`).innerText;
+                return `${conf.name}: ${val}`;
+            }).join(' | ');
+
+            records.push({
+                id: Date.now(),
+                type: 'supp',
+                dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`,
+                time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'),
+                duration: '补剂摄入',
+                parts: `💊 补剂组合`,
+                weight: details,
+                intensity: '摄入完成',
+                color: '#6366F1'
+            });
+            saveAndRefetch();
+        }
+
+        function saveAndRefetch() {
+            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); 
+            localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
+            fireCelebration();
+            setTimeout(() => { location.reload(); }, 1000);
+        }
+
         function fireCelebration() {
-            const duration = 2 * 1000; const end = Date.now() + duration;
+            const end = Date.now() + 2000;
             (function frame() {
-                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#6366F1', '#FB7185', '#10B981'] });
-                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#6366F1', '#FB7185', '#10B981'] });
+                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
                 if (Date.now() < end) requestAnimationFrame(frame);
             }());
         }
 
-        function showView(view) { 
-            document.getElementById('workout-view').classList.toggle('hidden', view === 'calendar'); 
-            document.getElementById('calendar-view').classList.toggle('hidden', view === 'workout'); 
-            document.getElementById('nav-workout').classList.toggle('nav-active', view === 'workout'); 
-            document.getElementById('nav-calendar').classList.toggle('nav-active', view === 'calendar'); 
-        }
-        
         function renderCalendar() { 
             const now = new Date(); document.getElementById('calendar-title').innerText = `${now.getFullYear()}年 ${now.getMonth()+1}月`; 
             const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; 
@@ -285,19 +360,29 @@
             const list = document.getElementById('history-list'); list.innerHTML = '';
             [...records].reverse().forEach(r => {
                 const card = document.createElement('div'); card.className = 'record-card glass-card p-5 mb-3';
-                card.style.borderLeftColor = (r.color === '#FFFFFF' || !r.color) ? '#E2E8F0' : r.color;
-                const d = r.dateKey ? r.dateKey.split('-') : []; const dateShow = d.length === 3 ? `${d[1]}/${d[2]}` : '';
-                card.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black text-indigo-400">${dateShow} ${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div><p class="text-base font-black text-indigo-900">${r.parts}</p><p class="text-[10px] text-slate-500 font-bold">${r.weight} | ${r.intensity}</p>${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}<button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button><button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`;
+                card.style.borderLeftColor = r.color || '#E2E8F0';
+                const d = r.dateKey ? r.dateKey.split('-') : [];
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-black text-indigo-400">${d[1]}/${d[2]} ${r.time}</span>
+                        <span class="font-black text-indigo-900">${r.duration}</span>
+                    </div>
+                    <p class="text-base font-black text-indigo-900">${r.parts}</p>
+                    <p class="text-[10px] text-slate-500 font-bold">${r.weight} ${r.type==='workout' ? '| '+r.intensity : ''}</p>
+                    ${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}
+                    <button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button>
+                    <button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>
+                `;
                 list.appendChild(card);
             });
         }
 
         function editRecord(id) {
             const r = records.find(rec => rec.id === id); if (!r) return;
-            const nNote = prompt("修改备注:", r.note || ""); if (nNote !== null) r.note = nNote;
-            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderHistory();
+            const nNote = prompt("修改备注:", r.note || ""); if (nNote !== null) { r.note = nNote; localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderHistory(); }
         }
-        function deleteRecord(id) { if(confirm('确定删除此记录？')) { records = records.filter(r => r.id !== id); localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); init(); } }
+        function deleteRecord(id) { if(confirm('确定删除此记录？')) { records = records.filter(r => r.id !== id); localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderCalendar(); renderHistory(); } }
+
         init();
     </script>
 </body>
