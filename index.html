@@ -41,7 +41,6 @@
         .supp-card { transition: all 0.3s; border: 2px solid transparent; }
         .supp-card.selected { border-color: var(--brand-main); background: #F8FAFF; }
         .streak-badge { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; padding: 10px 20px; border-radius: 20px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
-        /* 颜色选择器：整齐的 3列 布局 */
         .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; position: relative; }
         .color-dot.selected { transform: scale(1.2); border-color: white; box-shadow: 0 0 0 2px currentColor; z-index: 10; }
     </style>
@@ -104,7 +103,7 @@
                     <div><p class="text-[10px] font-black text-slate-400 uppercase">用时</p><h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3></div>
                     <div id="color-palette" class="grid grid-cols-3 gap-3">
                         <div class="color-dot bg-indigo-950 text-indigo-950 selected" data-color="#1E1B4B" onclick="selectColor(this)"></div>
-                        <div class="color-dot bg-white border text-white" data-color="#FFFFFF" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-white border border-slate-200 text-white" data-color="#FFFFFF" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-rose-500 text-rose-500" data-color="#F43F5E" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-emerald-500 text-emerald-500" data-color="#10B981" onclick="selectColor(this)"></div>
                         <div class="color-dot bg-sky-500 text-sky-500" data-color="#0EA5E9" onclick="selectColor(this)"></div>
@@ -113,11 +112,11 @@
                 </div>
                 <div class="grid grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <div class="flex justify-between"><p class="text-[10px] font-black text-indigo-900 uppercase">重量</p><span id="weight-val" class="text-xs font-black text-rose-500">2 kg</span></div>
+                        <div class="flex justify-between"><p class="text-[10px] font-black text-indigo-900 uppercase">重量</p><span id="weight-val" class="text-[11px] font-black text-rose-500">2 kg</span></div>
                         <input type="range" id="weight-slider" min="0" max="100" step="2" value="2" class="w-full">
                     </div>
                     <div class="space-y-2">
-                        <div class="flex justify-between"><p class="text-[10px] font-black text-indigo-900 uppercase">强度</p><span id="intensity-val" class="text-xs font-black text-indigo-500">轻松自如</span></div>
+                        <div class="flex justify-between"><p class="text-[10px] font-black text-indigo-900 uppercase">强度</p><span id="intensity-val" class="text-[11px] font-black text-indigo-500">轻松自如</span></div>
                         <input type="range" id="intensity-slider" min="1" max="5" value="1" class="w-full">
                     </div>
                 </div>
@@ -169,7 +168,6 @@
             if (shouldCelebrate) {
                 fireCelebration();
                 if (window.navigator.vibrate) window.navigator.vibrate([40, 30, 40, 30, 80]);
-                // 修改：延迟一秒后自动跳转历史页面，不再强制刷新
                 setTimeout(() => { 
                     showView('calendar'); 
                     resetWorkoutState(); 
@@ -191,7 +189,6 @@
             updateStatusUI(); updateHeatmap(); updateQuickRepeatUI();
         }
 
-        // --- 其他核心逻辑 ---
         function selectColor(el) { document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected')); el.classList.add('selected'); selectedColor = el.getAttribute('data-color'); }
         function updateHeatmap() { document.querySelectorAll('.muscle-slice').forEach(slice => { const part = slice.getAttribute('data-part'); if (!part) return; const hrs = (Date.now() - (recoveryData[part] || 0)) / (1000 * 60 * 60); slice.classList.remove('heat-rested', 'heat-recovering', 'heat-fatigued'); if (hrs < 24) slice.classList.add('heat-fatigued'); else if (hrs < 48) slice.classList.add('heat-recovering'); else slice.classList.add('heat-rested'); }); }
         function updateStatusUI() {
