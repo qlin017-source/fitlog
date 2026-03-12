@@ -19,7 +19,12 @@
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
-        .is-active { fill: var(--active) !important; stroke: #000; stroke-width: 1.5; filter: drop-shadow(0 0 8px rgba(251, 113, 133, 0.4)); }
+        .is-active, .is-active path, .is-active rect, .is-active circle { 
+            fill: var(--active) !important; 
+            stroke: #000; 
+            stroke-width: 1.5; 
+            filter: drop-shadow(0 0 8px rgba(251, 113, 133, 0.4)); 
+        }
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
         .status-ready { background: #F1F5F9; color: #64748B; }
         .status-recovering { background: #FEF3C7; color: #92400E; }
@@ -145,8 +150,33 @@
             } else { if (!startBtn.innerText.includes('FINISH')) { startBtn.innerText = '请选择部位'; startBtn.classList.replace('bg-indigo-600', 'bg-slate-400'); startBtn.style.pointerEvents = 'none'; } }
         }
 
-        document.body.addEventListener('click', (e) => { const group = e.target.closest('[data-part]'); if (!group) return; const partName = group.getAttribute('data-part'); const pieces = document.querySelectorAll(`[data-part="${partName}"]`); const isActive = pieces[0].classList.contains('is-active'); pieces.forEach(p => p.classList.toggle('is-active', !isActive)); isActive ? selectedParts.delete(partName) : selectedParts.add(partName); updateStatusUI(); });
-        function toggleSpecial(mode) { const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch'); selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode); btn.classList.toggle('active'); updateStatusUI(); }
+        document.body.addEventListener('click', (e) => {
+            // 向上寻找最近的带有 data-part 属性的元素（包括组 g）
+            const group = e.target.closest('[data-part]'); 
+            if (!group) return;
+
+            const partName = group.getAttribute('data-part');
+            // 找到所有同名的部位（处理 Front 和 Back 同步）
+            const pieces = document.querySelectorAll(`[data-part="${partName}"]`);
+            
+            // 检查当前是否已选中
+            const isActive = group.classList.contains('is-active');
+
+            pieces.forEach(p => {
+                if (isActive) {
+                    p.classList.remove('is-active');
+                } else {
+                    p.classList.add('is-active');
+                }
+            });
+
+            if (isActive) {
+                selectedParts.delete(partName);
+            } else {
+                selectedParts.add(partName);
+            }
+            updateStatusUI();
+        });        function toggleSpecial(mode) { const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch'); selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode); btn.classList.toggle('active'); updateStatusUI(); }
 
         document.getElementById('weight-slider').oninput = function() { document.getElementById('weight-val').innerText = `${this.value} kg`; };
         document.getElementById('intensity-slider').oninput = function() { document.getElementById('intensity-val').innerText = intensityLabels[this.value]; };
