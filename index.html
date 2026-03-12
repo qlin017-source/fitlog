@@ -16,23 +16,20 @@
         body { background-color: var(--bg-main); min-height: 100vh; font-family: "PingFang SC", sans-serif; color: #1E1B4B; padding-top: env(safe-area-inset-top); margin: 0; overflow-x: hidden; }
         .glass-card { background: #FFFFFF; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border: 1px solid rgba(255, 255, 255, 1); }
         
-        /* 肌肉块基础样式 */
         .muscle-slice { stroke: rgba(0,0,0,0.08); stroke-width: 0.8; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; transform-box: fill-box; transform-origin: center; }
         .no-click { cursor: default; pointer-events: none; opacity: 0.6; } 
         .heat-rested { fill: var(--rested); }
         .heat-recovering { fill: var(--recovering); }
         .heat-fatigued { fill: var(--fatigued); }
         
-        /* --- 强化版选中反馈 --- */
         .is-active, .is-active path, .is-active rect, .is-active circle { 
             fill: #FB7185 !important; 
-            stroke: #E11D48 !important; /* 深红色描边 */
+            stroke: #E11D48 !important; 
             stroke-width: 1.5 !important;
             filter: drop-shadow(0 0 12px rgba(251, 113, 131, 0.6));
-            transform: scale(1.08); /* 选中微扩 */
+            transform: scale(1.08);
         }
 
-        /* 状态标签样式 */
         .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; }
         .status-ready { background: #F1F5F9; color: #64748B; }
         .status-recovering { background: #FEF3C7; color: #92400E; }
@@ -46,26 +43,23 @@
         
         .nav-active { color: var(--brand-main) !important; font-weight: 900; }
         
-        /* --- 颜色选择器强化反馈 --- */
         .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid #E2E8F0; position: relative; }
         .color-dot.selected { 
             transform: scale(1.3); 
-            border-color: var(--brand-main) !important; /* 统一使用品牌蓝选中框 */
+            border-color: var(--brand-main) !important; 
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); 
             z-index: 10; 
         }
-        .color-dot[data-color="#FFFFFF"] { background-color: #FFFFFF; } /* 确保白色背景明确 */
 
-        /* 日历与记录 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; }
         .day-today { background: var(--brand-main) !important; color: white !important; }
         .workout-dot { width: 4px; height: 4px; border-radius: 50%; margin: 1px; }
         .record-card { border-left: 8px solid transparent; position: relative; transition: transform 0.2s; border-radius: 20px; }
-        .action-btn { position: absolute; bottom: 14px; font-size: 18px; color: #CBD5E1; }
+        .action-btn { position: absolute; bottom: 14px; font-size: 16px; color: #CBD5E1; transition: color 0.2s; }
+        .action-btn:active { color: var(--brand-main); }
         .delete-btn { right: 16px; }
-        .supp-card { transition: all 0.3s; border: 2px solid transparent; }
-        .supp-card.selected { border-color: var(--brand-main); background: #F8FAFF; }
+        .edit-btn { right: 48px; }
         .streak-badge { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; padding: 10px 20px; border-radius: 20px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
     </style>
 </head>
@@ -304,16 +298,49 @@
 
         function applyLastWorkout() {
             const lastWorkout = [...records].reverse().find(r => r.type === 'workout'); if (!lastWorkout) return;
-            selectedParts.clear(); document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active')); 
-            const parts = lastWorkout.parts.split(' · ');
+            fillWorkoutFromData(lastWorkout);
+        }
+
+        // 编辑功能：填充数据并跳转
+        function editRecord(id) {
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+            if (record.type !== 'workout') { alert('补剂记录不可编辑'); return; }
+            
+            fillWorkoutFromData(record);
+            // 删除旧记录，等待新记录提交
+            records = records.filter(r => r.id !== id);
+            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records));
+            showView('workout');
+            if (window.navigator.vibrate) window.navigator.vibrate(30);
+        }
+
+        function fillWorkoutFromData(data) {
+            selectedParts.clear(); 
+            document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active')); 
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            
+            const parts = data.parts.split(' · ');
             parts.forEach(p => { 
                 selectedParts.add(p); 
                 if (p === '有氧') document.getElementById('btn-cardio').classList.add('active'); 
                 else if (p === '拉伸') document.getElementById('btn-stretch').classList.add('active'); 
                 else document.querySelectorAll(`[data-part="${p}"]`).forEach(el => el.classList.add('is-active')); 
             });
-            document.getElementById('weight-slider').value = parseInt(lastWorkout.weight); document.getElementById('weight-val').innerText = lastWorkout.weight;
-            const colorDiv = document.querySelector(`[data-color="${lastWorkout.color}"]`); if (colorDiv) selectColor(colorDiv);
+            
+            const w = parseInt(data.weight) || 0;
+            document.getElementById('weight-slider').value = w; 
+            document.getElementById('weight-val').innerText = `${w} kg`;
+            
+            const intensityIdx = intensityLabels.indexOf(data.intensity);
+            if (intensityIdx > 0) {
+                document.getElementById('intensity-slider').value = intensityIdx;
+                document.getElementById('intensity-val').innerText = data.intensity;
+            }
+            
+            document.getElementById('note-field').value = data.note || '';
+            const colorDiv = document.querySelector(`[data-color="${data.color}"]`); 
+            if (colorDiv) selectColor(colorDiv);
             updateStatusUI();
         }
 
@@ -346,7 +373,16 @@
                 card.className = 'record-card glass-card p-5 mb-3'; 
                 card.style.borderLeftColor = r.color || '#E2E8F0'; 
                 const d = r.dateKey.split('-'); 
-                card.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black text-indigo-400">${d[1]}/${d[2]} ${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div><p class="text-base font-black text-indigo-900">${r.parts}</p><p class="text-[10px] text-slate-500 font-bold">${r.weight} ${r.type==='workout' ? '| '+r.intensity : ''}</p>${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}<button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`; 
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-black text-indigo-400">${d[1]}/${d[2]} ${r.time}</span>
+                        <span class="font-black text-indigo-900">${r.duration}</span>
+                    </div>
+                    <p class="text-base font-black text-indigo-900">${r.parts}</p>
+                    <p class="text-[10px] text-slate-500 font-bold">${r.weight} ${r.type==='workout' ? '| '+r.intensity : ''}</p>
+                    ${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}
+                    <button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button>
+                    <button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`; 
                 list.appendChild(card); 
             }); 
         }
