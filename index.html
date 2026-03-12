@@ -2,11 +2,20 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/neon/512/experimental-flash-on-neon.png?v=2077">
+    
+    <link rel="apple-touch-icon" href="https://img.icons8.com/neon/512/experimental-flash-on-neon.png">
+    
+    <link rel="apple-touch-icon" sizes="152x152" href="https://img.icons8.com/fluency/152/flash-on.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://img.icons8.com/fluency/180/flash-on.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="https://img.icons8.com/fluency/167/flash-on.png">
+    
+    <link rel="apple-touch-startup-image" href="https://img.icons8.com/neon/512/experimental-flash-on-neon.png">
+    
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>FitLog⚡️</title>
+    <title>FitLog</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --bg-main: #EDF2FF; --brand-main: #6366F1; --rested: #E2E8F0; --recovering: #FCD34D; --fatigued: #60A5FA; --active: #FB7185; }
@@ -28,18 +37,14 @@
         .mode-btn.active { background: var(--brand-main); color: white; border-color: var(--brand-main); }
         input[type=range] { -webkit-appearance: none; background: #E0E7FF; height: 8px; border-radius: 4px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--brand-main); border: 3px solid #FFF; }
-        
-        /* 颜色标注优化：缩小圆点，缩减间距 */
-        .color-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; transition: all 0.2s; position: relative; }
-        .color-dot.active { border-color: white; box-shadow: 0 0 0 2px var(--brand-main); transform: scale(1.1); }
-        
         .nav-active { color: var(--brand-main) !important; font-weight: 900; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: #FFF; position: relative; }
         .day-today { background: var(--brand-main) !important; color: white !important; }
         .workout-dot { width: 4px; height: 4px; border-radius: 50%; margin: 1px; }
         .record-card { border-left: 8px solid transparent; position: relative; }
-        .delete-btn { position: absolute; bottom: 12px; right: 16px; color: #CBD5E1; font-size: 14px; font-weight: 800; }
+        .delete-btn { position: absolute; bottom: 12px; right: 16px; color: #CBD5E1; font-size: 18px; padding: 4px; font-weight: normal; }
+        .delete-btn:active { color: #F43F5E; }
     </style>
 </head>
 <body>
@@ -90,14 +95,15 @@
             <section class="glass-card p-8 space-y-8 text-left shadow-sm">
                 <div class="flex justify-between items-start">
                     <div><p class="text-[10px] font-black text-slate-400">计时 DURATION</p><h3 class="text-4xl font-black mt-1 tabular-nums" id="timer-display">00:00:00</h3></div>
-                    <div class="text-right">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">标记 COLOR</p>
-                        <div class="flex gap-2" id="color-palette">
-                            <div class="color-dot active" style="background:#1E1B4B" data-color="#1E1B4B"></div>
-                            <div class="color-dot" style="background:#F43F5E" data-color="#F43F5E"></div>
-                            <div class="color-dot" style="background:#10B981" data-color="#10B981"></div>
-                            <div class="color-dot" style="background:#0EA5E9" data-color="#0EA5E9"></div>
-                            <div class="color-dot" style="background:#FB923C" data-color="#FB923C"></div>
+                    <div class="text-right flex-1 pl-4">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">标记 Color</p>
+                        <div class="grid grid-cols-3 gap-2" id="color-palette">
+                            <div class="w-6 h-6 rounded-full bg-indigo-950 ring-2 ring-indigo-400" data-color="#1E1B4B" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-white border ring-2 ring-transparent" data-color="#FFFFFF" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-rose-500 ring-2 ring-transparent" data-color="#F43F5E" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-emerald-500 ring-2 ring-transparent" data-color="#10B981" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-sky-500 ring-2 ring-transparent" data-color="#0EA5E9" onclick="selectColor(this)"></div>
+                            <div class="w-6 h-6 rounded-full bg-orange-400 ring-2 ring-transparent" data-color="#FB923C" onclick="selectColor(this)"></div>
                         </div>
                     </div>
                 </div>
@@ -109,16 +115,21 @@
                     <div class="flex justify-between items-end"><p class="text-sm font-black text-indigo-900">强度 Intensity</p><span id="intensity-val" class="text-sm font-black text-indigo-500">中等 (5)</span></div>
                     <input type="range" id="intensity-slider" min="1" max="10" value="5" class="w-full">
                 </div>
-                <textarea id="note-field" rows="2" placeholder="备注..." class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm outline-none"></textarea>
+                <div class="space-y-2 pt-4 border-t border-slate-50">
+                    <p class="text-sm font-black text-indigo-900">备注 Notes</p>
+                    <textarea id="note-field" rows="2" placeholder="动作细节或心情..." class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm outline-none"></textarea>
+                </div>
             </section>
         </main>
     </div>
 
     <div id="calendar-view" class="px-6 pt-16 pb-40 hidden">
-        <header class="text-center mb-8"><h2 class="text-2xl font-black text-indigo-900 uppercase">记录Doc</h2></header>
+        <header class="text-center mb-8">
+            <h2 class="text-2xl font-black text-indigo-900 uppercase">记录Doc</h2>
+        </header>
         <div class="max-w-md mx-auto space-y-8">
             <div class="glass-card p-6 shadow-sm">
-                <p class="text-center font-black mb-4 text-xs text-slate-400" id="calendar-title"></p>
+                <p class="text-center font-black mb-4 text-xs text-slate-400" id="calendar-title">2026年 3月</p>
                 <div class="calendar-grid" id="calendar-days"></div>
             </div>
             <div id="history-list" class="space-y-4 pb-10"></div>
@@ -131,25 +142,20 @@
     </nav>
 
     <script>
-        // --- 数据存储恢复 ---
-        let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v96')) || {};
-        let records = JSON.parse(localStorage.getItem('fitlog_logs_v96')) || [];
+        let recoveryData = JSON.parse(localStorage.getItem('fitlog_rec_v94')) || {};
+        let records = JSON.parse(localStorage.getItem('fitlog_logs_v94')) || [];
         let selectedParts = new Set();
-        let currentSelectedColor = '#1E1B4B';
+        let selectedColor = '#1E1B4B';
         let timer, seconds = 0;
 
         function init() { renderCalendar(); updateHeatmap(); renderHistory(); }
 
-        // --- 修正后的颜色点击逻辑 ---
-        document.querySelectorAll('.color-dot').forEach(dot => {
-            dot.addEventListener('click', function() {
-                document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-                this.classList.add('active');
-                currentSelectedColor = this.getAttribute('data-color');
-            });
-        });
+        function selectColor(el) {
+            document.querySelectorAll('#color-palette div').forEach(d => d.classList.remove('ring-indigo-400','ring-2'));
+            el.classList.add('ring-indigo-400','ring-2'); 
+            selectedColor = el.getAttribute('data-color');
+        }
 
-        // --- 身体部位逻辑 ---
         function updateHeatmap() {
             document.querySelectorAll('.muscle-slice').forEach(slice => {
                 const part = slice.getAttribute('data-part'); if (!part) return;
@@ -161,46 +167,68 @@
             });
         }
 
+        function updateStatusUI() {
+            const statusBox = document.getElementById('recovery-status');
+            if (!selectedParts.size) { statusBox.classList.add('hidden'); document.getElementById('part-summary').innerText = '选择部位开始训练'; }
+            else {
+                statusBox.classList.remove('hidden'); statusBox.innerHTML = '';
+                selectedParts.forEach(p => {
+                    const tag = document.createElement('span');
+                    if(['有氧','拉伸'].includes(p)) { tag.className = 'status-tag status-ready'; tag.innerText = p; }
+                    else {
+                        const hrs = (Date.now() - (recoveryData[p] || 0)) / (1000 * 60 * 60);
+                        let cfg = hrs < 24 ? {l:'刚练完', c:'status-training'} : (hrs < 48 ? {l:'恢复中', c:'status-recovering'} : {l:'已就绪', c:'status-ready'});
+                        tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}: ${cfg.l}`;
+                    }
+                    statusBox.appendChild(tag);
+                });
+                document.getElementById('part-summary').innerText = Array.from(selectedParts).join(' · ');
+            }
+        }
+
         document.body.addEventListener('click', (e) => {
             const group = e.target.closest('[data-part]'); if (!group) return;
             const partName = group.getAttribute('data-part');
             const pieces = document.querySelectorAll(`[data-part="${partName}"]`);
             const isActive = pieces[0].classList.contains('is-active');
-            pieces.forEach(p => p.classList.toggle('is-active', !isActive));
+            pieces.forEach(p => {
+                if(p.tagName === 'g') p.querySelectorAll('.muscle-slice').forEach(s => s.classList.toggle('is-active', !isActive));
+                else p.classList.toggle('is-active', !isActive);
+            });
             isActive ? selectedParts.delete(partName) : selectedParts.add(partName);
-            document.getElementById('part-summary').innerText = selectedParts.size ? Array.from(selectedParts).join(' · ') : '选择部位开始训练';
+            updateStatusUI();
         });
 
         function toggleSpecial(mode) {
             const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch');
             selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode);
-            btn.classList.toggle('active');
-            document.getElementById('part-summary').innerText = selectedParts.size ? Array.from(selectedParts).join(' · ') : '选择部位开始训练';
+            btn.classList.toggle('active'); updateStatusUI();
         }
 
         document.getElementById('weight-slider').oninput = function() { document.getElementById('weight-val').innerText = `${this.value == 0 ? 2 : this.value} kg`; };
 
-        // --- 核心训练逻辑 ---
         const startBtn = document.getElementById('go-btn');
         startBtn.onclick = () => {
             if (startBtn.innerText.includes('完成')) {
                 const now = new Date();
                 const record = {
-                    id: Date.now(),
+                    id: Date.now(), 
+                    timestamp: Date.now(), 
                     dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`,
                     day: now.getDate(),
                     time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'),
                     duration: document.getElementById('timer-display').innerText,
-                    parts: Array.from(selectedParts).join(' · ') || '自由训练',
+                    parts: Array.from(selectedParts).join(' · ') || '全能训练',
                     weight: document.getElementById('weight-val').innerText,
-                    intensity: document.getElementById('intensity-slider').value,
-                    color: currentSelectedColor, // 确保保存当前选中的颜色
+                    intensity: `${["","恢复","极轻","较轻","稍强","中等","高强","艰苦","极累","极限","拼命"][document.getElementById('intensity-slider').value]} (${document.getElementById('intensity-slider').value})`,
+                    color: selectedColor,
                     note: document.getElementById('note-field').value
                 };
                 records.push(record);
                 selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
                 saveData();
                 clearInterval(timer); seconds = 0; document.getElementById('timer-display').innerText = '00:00:00';
+                document.getElementById('note-field').value = '';
                 startBtn.innerText = '开始训练 START'; startBtn.classList.replace('bg-rose-500', 'bg-indigo-600');
                 init(); showView('calendar');
             } else {
@@ -216,14 +244,15 @@
         };
 
         function saveData() {
-            localStorage.setItem('fitlog_logs_v96', JSON.stringify(records));
-            localStorage.setItem('fitlog_rec_v96', JSON.stringify(recoveryData));
+            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records));
+            localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
         }
 
         function deleteRecord(id) {
             if(confirm('确定要删除这条记录吗？')) {
                 records = records.filter(r => r.id !== id);
-                saveData(); init();
+                saveData();
+                init();
             }
         }
 
@@ -243,7 +272,7 @@
                 const day = document.createElement('div');
                 day.className = `day-cell ${i===now.getDate() ? 'day-today' : ''}`;
                 const dateStr = `${now.getFullYear()}-${now.getMonth()+1}-${i}`;
-                const dayWorkouts = records.filter(r => r.dateKey === dateStr);
+                const dayWorkouts = records.filter(r => r.dateKey === dateStr || (r.day === i && !r.dateKey));
                 let dotsHtml = dayWorkouts.map(d => `<div class="workout-dot" style="background:${d.color}"></div>`).join('');
                 day.innerHTML = `<span>${i}</span><div class="flex flex-wrap justify-center">${dotsHtml}</div>`;
                 grid.appendChild(day);
@@ -255,11 +284,14 @@
             [...records].reverse().forEach(r => {
                 const card = document.createElement('div');
                 card.className = 'record-card glass-card p-6 shadow-sm mb-4';
-                card.style.borderLeftColor = r.color;
+                card.style.borderLeftColor = r.color === '#FFFFFF' ? '#E2E8F0' : r.color;
                 card.innerHTML = `
-                    <div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black text-indigo-400">${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-black text-indigo-400">${r.time}</span>
+                        <span class="font-black text-indigo-900">${r.duration}</span>
+                    </div>
                     <p class="text-lg font-black text-indigo-900">${r.parts}</p>
-                    <p class="text-xs text-slate-500 font-bold">${r.weight} | 强度 ${r.intensity}</p>
+                    <p class="text-xs text-slate-500 font-bold">${r.weight} | ${r.intensity}</p>
                     ${r.note ? `<div class="mt-2 pt-2 border-t border-slate-50 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}
                     <button onclick="deleteRecord(${r.id})" class="delete-btn">删除</button>
                 `;
