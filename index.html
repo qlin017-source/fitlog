@@ -61,6 +61,9 @@
 
         .supp-card { transition: all 0.3s; border: 2px solid transparent; }
         .supp-card.selected { border-color: var(--brand-main); background: #F8FAFF; }
+
+        /* Streak Badge Style */
+        .streak-badge { background: linear-gradient(135deg, #FF9D6C 0%, #FB7185 100%); color: white; padding: 10px 20px; border-radius: 20px; box-shadow: 0 8px 15px rgba(251, 113, 131, 0.3); }
     </style>
 </head>
 <body>
@@ -70,7 +73,7 @@
             <section class="glass-card p-6 flex flex-col items-center">
                 <div class="flex justify-around items-start w-full mt-2 mb-2">
                     <div class="flex-1 flex flex-col items-center">
-                        <span class="text-[10px] font-black text-slate-300 mb-4 uppercase">Front</span>
+                        <span class="text-[10px] font-black text-slate-300 mb-4 uppercase">正面</span>
                         <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" /> 
                             <circle data-part="肩膀" cx="31" cy="29" r="7" class="muscle-slice heat-rested" />
@@ -95,7 +98,7 @@
                         </svg>
                     </div>
                     <div class="flex-1 flex flex-col items-center">
-                        <span class="text-[10px] font-black text-slate-300 mb-4 uppercase">Back</span>
+                        <span class="text-[10px] font-black text-slate-300 mb-4 uppercase">背面</span>
                         <svg viewBox="0 0 100 160" class="w-32 h-auto overflow-visible">
                             <circle cx="50" cy="15" r="9" class="muscle-slice heat-rested no-click" />
                             <path data-part="背部" d="M28 28 q22 -6 44 0 l-4 16 h-36 z" class="muscle-slice heat-rested" />
@@ -119,7 +122,7 @@
             </section>
             <section class="glass-card p-6 space-y-6 text-left">
                 <div class="flex justify-between items-center">
-                    <div><p class="text-[10px] font-black text-slate-400 uppercase">时长</p><h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3></div>
+                    <div><p class="text-[10px] font-black text-slate-400 uppercase">用时</p><h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3></div>
                     <div id="color-palette" class="flex flex-wrap justify-end gap-1.5" style="max-width:120px">
                         <div class="w-5 h-5 rounded-full bg-indigo-950 ring-2 ring-indigo-400" data-color="#1E1B4B" onclick="selectColor(this)"></div>
                         <div class="w-5 h-5 rounded-full bg-white border ring-1 ring-transparent" data-color="#FFFFFF" onclick="selectColor(this)"></div>
@@ -145,7 +148,7 @@
     </div>
 
     <div id="supps-view" class="px-6 pt-12 pb-40 hidden">
-        <header class="text-center mb-8"><h2 class="text-2xl font-black text-indigo-950 italic">Supplements<span class="text-rose-500">.</span></h2></header>
+        <header class="text-center mb-8"><h2 class="text-2xl font-black text-indigo-950 italic">营养补充<span class="text-rose-500">.</span></h2></header>
         <main class="max-w-md mx-auto space-y-4" id="supp-list"></main>
         <div class="fixed bottom-32 left-8 right-8">
             <button id="supp-save-btn" onclick="saveSuppsBatch()" class="w-full bg-slate-400 text-white py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">请选择补剂 (0)</button>
@@ -153,7 +156,13 @@
     </div>
 
     <div id="calendar-view" class="px-6 pt-12 pb-32 hidden">
-        <header class="text-center mb-8"><h2 class="text-xl font-black text-indigo-900 uppercase">训练月历</h2></header>
+        <header class="flex flex-col items-center mb-8 space-y-4">
+            <h2 class="text-xl font-black text-indigo-900 uppercase">训练月历</h2>
+            <div id="streak-container" class="streak-badge flex items-center gap-2">
+                <span class="text-xl">🔥</span>
+                <span class="font-black">连续训练 <span id="streak-count">0</span> 天</span>
+            </div>
+        </header>
         <div class="max-w-md mx-auto space-y-6">
             <div class="glass-card p-6">
                 <p class="text-center font-black mb-4 text-xs text-slate-400" id="calendar-title"></p>
@@ -179,8 +188,8 @@
         const intensityLabels = ["", "轻松自如", "微微出汗", "呼吸急促", "肌肉酸胀", "力竭边缘"];
 
         const suppConfigs = [
-            { id: 'pro', name: '蛋白粉', icon: '🍗', unit: 'g', max: 60, def: 30 },
-            { id: 'cre', name: '肌酸', icon: '⚡', unit: 'g', max: 10, def: 5 },
+            { id: 'pro', name: '蛋白粉', icon: '🍗', unit: '克', max: 60, def: 30 },
+            { id: 'cre', name: '肌酸', icon: '⚡', unit: '克', max: 10, def: 5 },
             { id: 'pre', name: '氮泵', icon: '🔥', unit: '勺', max: 2, def: 1 },
             { id: 'fish', name: '鱼油', icon: '🐟', unit: '粒', max: 4, def: 2 }
         ];
@@ -190,16 +199,64 @@
             updateHeatmap(); 
             renderSupps();
             updateStatusUI(); 
+            updateStreak();
         }
 
         function showView(view) {
             document.getElementById('workout-view').classList.toggle('hidden', view !== 'workout');
             document.getElementById('supps-view').classList.toggle('hidden', view !== 'supps');
             document.getElementById('calendar-view').classList.toggle('hidden', view !== 'calendar');
-            document.getElementById('nav-workout').className = `flex flex-col items-center gap-1 ${view === 'workout' ? 'nav-active' : 'text-slate-300'}`;
-            document.getElementById('nav-supps').className = `flex flex-col items-center gap-1 ${view === 'supps' ? 'nav-active' : 'text-slate-300'}`;
-            document.getElementById('nav-calendar').className = `flex flex-col items-center gap-1 ${view === 'calendar' ? 'nav-active' : 'text-slate-300'}`;
-            if (view === 'calendar') renderHistory();
+            
+            const navItems = ['workout', 'supps', 'calendar'];
+            navItems.forEach(item => {
+                const btn = document.getElementById(`nav-${item}`);
+                if (item === view) {
+                    btn.classList.add('nav-active');
+                    btn.classList.remove('text-slate-300');
+                } else {
+                    btn.classList.remove('nav-active');
+                    btn.classList.add('text-slate-300');
+                }
+            });
+            if (view === 'calendar') {
+                renderHistory();
+                updateStreak();
+            }
+        }
+
+        // --- 连续打卡逻辑 ---
+        function updateStreak() {
+            if (records.length === 0) {
+                document.getElementById('streak-count').innerText = "0";
+                return;
+            }
+
+            // 获取所有有训练记录的日期集合（去重）
+            const trainingDates = new Set(
+                records.filter(r => r.type === 'workout')
+                       .map(r => r.dateKey)
+            );
+
+            let streak = 0;
+            let checkDate = new Date();
+            checkDate.setHours(0,0,0,0);
+
+            // 如果今天没练，先检查昨天
+            const todayStr = `${checkDate.getFullYear()}-${checkDate.getMonth()+1}-${checkDate.getDate()}`;
+            if (!trainingDates.has(todayStr)) {
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+
+            while (true) {
+                const dateStr = `${checkDate.getFullYear()}-${checkDate.getMonth()+1}-${checkDate.getDate()}`;
+                if (trainingDates.has(dateStr)) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+            document.getElementById('streak-count').innerText = streak;
         }
 
         // --- 训练逻辑 ---
@@ -229,7 +286,7 @@
                     tag.className = `status-tag ${cfg.c}`; tag.innerText = `${p}:${cfg.l}`; 
                 } statusBox.appendChild(tag); 
             });
-            if (!startBtn.innerText.includes('FINISH')) {
+            if (!startBtn.innerText.includes('完成')) {
                 if (selectedParts.size > 0) {
                     startBtn.innerText = `开始训练 ${Array.from(selectedParts).join('·')}`; 
                     startBtn.classList.replace('bg-slate-400', 'bg-indigo-600');
@@ -244,6 +301,7 @@
 
         document.body.addEventListener('click', (e) => {
             const group = e.target.closest('[data-part]'); if (!group) return;
+            if (window.navigator.vibrate) window.navigator.vibrate(15);
             const partName = group.getAttribute('data-part');
             const pieces = document.querySelectorAll(`[data-part="${partName}"]`);
             const isActive = group.classList.contains('is-active');
@@ -256,6 +314,7 @@
             const btn = document.getElementById(mode === '有氧' ? 'btn-cardio' : 'btn-stretch'); 
             selectedParts.has(mode) ? selectedParts.delete(mode) : selectedParts.add(mode); 
             btn.classList.toggle('active');
+            if (window.navigator.vibrate) window.navigator.vibrate(15);
             updateStatusUI(); 
         }
 
@@ -263,18 +322,19 @@
         document.getElementById('intensity-slider').oninput = function() { document.getElementById('intensity-val').innerText = intensityLabels[this.value]; };
 
         document.getElementById('go-btn').onclick = function() {
-            if (this.innerText.includes('FINISH')) {
+            if (this.innerText.includes('完成')) {
                 const now = new Date();
                 records.push({ id: Date.now(), type: 'workout', dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`, time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'), duration: document.getElementById('timer-display').innerText, parts: Array.from(selectedParts).join(' · '), weight: document.getElementById('weight-val').innerText, intensity: document.getElementById('intensity-val').innerText, color: selectedColor, note: document.getElementById('note-field').value });
                 selectedParts.forEach(p => { if(!['有氧','拉伸'].includes(p)) recoveryData[p] = Date.now(); });
-                saveAndRefetch();
+                saveAndRefetch(true); // 训练记录需要庆祝
             } else {
+                if (window.navigator.vibrate) window.navigator.vibrate(30);
                 this.innerText = '完成训练 FINISH'; this.classList.replace('bg-indigo-600', 'bg-rose-500');
                 timer = setInterval(() => { seconds++; const h = Math.floor(seconds/3600).toString().padStart(2,'0'); const m = Math.floor((seconds%3600)/60).toString().padStart(2,'0'); const s = (seconds%60).toString().padStart(2,'0'); document.getElementById('timer-display').innerText = `${h}:${m}:${s}`; }, 1000);
             }
         };
 
-        // --- 补剂逻辑 (核心修改：合并记录) ---
+        // --- 补剂逻辑 ---
         function renderSupps() {
             const container = document.getElementById('supp-list');
             container.innerHTML = suppConfigs.map(s => `
@@ -301,12 +361,12 @@
             const btn = document.getElementById('supp-save-btn');
             btn.innerText = selectedSupps.size ? `确认记录 ${selectedSupps.size} 项补剂` : '请选择补剂 (0)';
             btn.className = `w-full py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all ${selectedSupps.size ? 'bg-indigo-600 text-white' : 'bg-slate-400 text-white'}`;
+            if (window.navigator.vibrate) window.navigator.vibrate(15);
         }
 
         function saveSuppsBatch() {
             if (!selectedSupps.size) return;
             const now = new Date();
-            // 合并选中的补剂信息到一个对象中
             const details = Array.from(selectedSupps).map(id => {
                 const conf = suppConfigs.find(c => c.id === id);
                 const val = document.getElementById(`supp-val-${id}`).innerText;
@@ -318,20 +378,30 @@
                 type: 'supp',
                 dateKey: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`,
                 time: now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'),
-                duration: '补剂摄入',
+                duration: '补充完成',
                 parts: `💊 补剂组合`,
                 weight: details,
-                intensity: '摄入完成',
+                intensity: '健康摄入',
                 color: '#6366F1'
             });
-            saveAndRefetch();
+            saveAndRefetch(false); // 补剂记录不庆祝，直接跳转
         }
 
-        function saveAndRefetch() {
+        function saveAndRefetch(shouldCelebrate) {
             localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); 
             localStorage.setItem('fitlog_rec_v94', JSON.stringify(recoveryData));
-            fireCelebration();
-            setTimeout(() => { location.reload(); }, 1000);
+            
+            if (shouldCelebrate) {
+                fireCelebration();
+                if (window.navigator.vibrate) window.navigator.vibrate([40, 30, 40, 30, 80]);
+                setTimeout(() => { location.reload(); }, 1000);
+            } else {
+                // 补剂记录逻辑：跳转到日历
+                showView('calendar');
+                renderCalendar();
+                renderHistory();
+                updateStreak();
+            }
         }
 
         function fireCelebration() {
@@ -381,7 +451,7 @@
             const r = records.find(rec => rec.id === id); if (!r) return;
             const nNote = prompt("修改备注:", r.note || ""); if (nNote !== null) { r.note = nNote; localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderHistory(); }
         }
-        function deleteRecord(id) { if(confirm('确定删除此记录？')) { records = records.filter(r => r.id !== id); localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderCalendar(); renderHistory(); } }
+        function deleteRecord(id) { if(confirm('确定删除此记录？')) { records = records.filter(r => r.id !== id); localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderCalendar(); renderHistory(); updateStreak(); } }
 
         init();
     </script>
