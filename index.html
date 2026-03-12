@@ -167,22 +167,55 @@
         function showView(view) { document.getElementById('workout-view').classList.toggle('hidden', view === 'calendar'); document.getElementById('calendar-view').classList.toggle('hidden', view === 'workout'); document.getElementById('nav-workout').classList.toggle('nav-active', view === 'workout'); document.getElementById('nav-calendar').classList.toggle('nav-active', view === 'calendar'); }
         function renderCalendar() { const now = new Date(); document.getElementById('calendar-title').innerText = `${now.getFullYear()}年 ${now.getMonth()+1}月`; const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); for(let i=1; i<=daysInMonth; i++) { const dayStr = `${now.getFullYear()}-${now.getMonth()+1}-${i}`; const day = document.createElement('div'); day.className = `day-cell ${i===now.getDate() ? 'day-today' : ''}`; const dayWorkouts = records.filter(r => r.dateKey === dayStr); let dotsHtml = dayWorkouts.map(d => `<div class="workout-dot" style="background:${d.color}"></div>`).join(''); day.innerHTML = `<span>${i}</span><div class="flex flex-wrap justify-center">${dotsHtml}</div>`; grid.appendChild(day); } }
         
-        function renderHistory() {
+       function renderHistory() {
             const list = document.getElementById('history-list'); list.innerHTML = '';
             [...records].reverse().forEach(r => {
-                const card = document.createElement('div'); card.className = 'record-card glass-card p-5 mb-3'; card.style.borderLeftColor = (r.color === '#FFFFFF' || !r.color) ? '#E2E8F0' : r.color;
-                const d = r.dateKey ? r.dateKey.split('-') : []; const dateShow = d.length === 3 ? `${d[1]}/${d[2]}` : '';
-                card.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black text-indigo-400">${dateShow} ${r.time}</span><span class="font-black text-indigo-900">${r.duration}</span></div><p class="text-base font-black text-indigo-900">${r.parts}</p><p class="text-[10px] text-slate-500 font-bold">${r.weight} | ${r.intensity}</p>${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}<button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button><button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`;
+                const card = document.createElement('div');
+                card.className = 'record-card glass-card p-5 mb-3';
+                card.style.borderLeftColor = (r.color === '#FFFFFF' || !r.color) ? '#E2E8F0' : r.color;
+                
+                const d = r.dateKey ? r.dateKey.split('-') : [];
+                const dateShow = d.length === 3 ? `${d[1]}/${d[2]}` : '';
+
+                // 确保重量显示始终带有 kg
+                const displayWeight = r.weight.includes('kg') ? r.weight : `${r.weight} kg`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-black text-indigo-400">${dateShow} ${r.time}</span>
+                        <span class="font-black text-indigo-900">${r.duration}</span>
+                    </div>
+                    <p class="text-base font-black text-indigo-900">${r.parts}</p>
+                    <p class="text-[10px] text-slate-500 font-bold">${displayWeight} | ${r.intensity}</p>
+                    ${r.note ? `<div class="mt-2 text-[11px] text-slate-400 italic">"${r.note}"</div>` : ''}
+                    <button onclick="editRecord(${r.id})" class="action-btn edit-btn">✎</button>
+                    <button onclick="deleteRecord(${r.id})" class="action-btn delete-btn">✕</button>`;
                 list.appendChild(card);
             });
         }
 
         function editRecord(id) {
-            const r = records.find(rec => rec.id === id); if (!r) return;
-            const nNote = prompt("修改备注:", r.note || ""); if (nNote !== null) r.note = nNote;
-            const nWeight = prompt("修改负重 (kg):", r.weight.replace(" kg","")); if (nWeight !== null) r.weight = nWeight + " kg";
-            const nInt = prompt("修改程度 (轻松自如/微微出汗/呼吸急促/肌肉酸胀/力竭边缘):", r.intensity); if (nInt !== null) r.intensity = nInt;
-            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); renderHistory();
+            const r = records.find(rec => rec.id === id);
+            if (!r) return;
+
+            // 1. 修改备注
+            const nNote = prompt("修改备注:", r.note || "");
+            if (nNote !== null) r.note = nNote;
+
+            // 2. 修改负重 (自动处理 kg 单位)
+            const currentW = r.weight.toString().replace(" kg", "");
+            const nWeight = prompt("修改负重 (kg):", currentW);
+            if (nWeight !== null && nWeight !== "") {
+                r.weight = nWeight.includes("kg") ? nWeight : `${nWeight} kg`;
+            }
+
+            // 3. 修改程度词
+            const nInt = prompt("修改程度 (轻松自如/微微出汗/呼吸急促/肌肉酸胀/力竭边缘):", r.intensity);
+            if (nInt !== null) r.intensity = nInt;
+
+            localStorage.setItem('fitlog_logs_v94', JSON.stringify(records));
+            renderHistory();
+            renderCalendar(); // 同步更新日历打点（如果未来需要显示重量）
         }
 
         function deleteRecord(id) { if(confirm('确定删除此记录？')) { records = records.filter(r => r.id !== id); localStorage.setItem('fitlog_logs_v94', JSON.stringify(records)); init(); } }
