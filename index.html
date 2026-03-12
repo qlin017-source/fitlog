@@ -63,6 +63,10 @@
         .supp-card.selected { border-color: var(--brand-main); background: #F8FAFF; }
 
         .streak-badge { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; padding: 10px 20px; border-radius: 20px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
+
+        /* 颜色选择器优化样式 */
+        .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .color-dot.selected { transform: scale(1.2); border-color: white; box-shadow: 0 0 0 2px currentColor; }
     </style>
 </head>
 <body>
@@ -133,13 +137,15 @@
             <section class="glass-card p-6 space-y-6 text-left">
                 <div class="flex justify-between items-center">
                     <div><p class="text-[10px] font-black text-slate-400 uppercase">用时</p><h3 class="text-3xl font-black tabular-nums" id="timer-display">00:00:00</h3></div>
-                    <div id="color-palette" class="flex flex-wrap justify-end gap-1.5" style="max-width:120px">
-                        <div class="w-5 h-5 rounded-full bg-indigo-950 ring-2 ring-indigo-400" data-color="#1E1B4B" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-white border ring-1 ring-transparent" data-color="#FFFFFF" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-rose-500 ring-1 ring-transparent" data-color="#F43F5E" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-emerald-500 ring-1 ring-transparent" data-color="#10B981" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-sky-500 ring-1 ring-transparent" data-color="#0EA5E9" onclick="selectColor(this)"></div>
-                        <div class="w-5 h-5 rounded-full bg-orange-400 ring-1 ring-transparent" data-color="#FB923C" onclick="selectColor(this)"></div>
+                    <div id="color-palette" class="flex flex-wrap justify-end gap-2" style="max-width:160px">
+                        <div class="color-dot bg-indigo-950 text-indigo-950 selected" data-color="#1E1B4B" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-white border text-white" data-color="#FFFFFF" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-rose-500 text-rose-500" data-color="#F43F5E" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-emerald-500 text-emerald-500" data-color="#10B981" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-sky-500 text-sky-500" data-color="#0EA5E9" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-orange-400 text-orange-400" data-color="#FB923C" onclick="selectColor(this)"></div>
+                        <div class="color-dot bg-violet-600 text-violet-600" data-color="#7C3AED" onclick="selectColor(this)"></div>
+                        <div class="color-dot" style="background-color:#4B5320; color:#4B5320;" data-color="#4B5320" onclick="selectColor(this)"></div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-6">
@@ -238,7 +244,6 @@
             }
         }
 
-        // --- 连续打卡逻辑 ---
         function calculateStreak() {
             if (records.length === 0) {
                 document.getElementById('streak-count').innerText = '0';
@@ -271,7 +276,6 @@
             document.getElementById('streak-count').innerText = streak;
         }
 
-        // --- 复刻逻辑 ---
         function updateQuickRepeatUI() {
             const lastWorkout = [...records].reverse().find(r => r.type === 'workout');
             const container = document.getElementById('quick-repeat-container');
@@ -286,13 +290,11 @@
             const lastWorkout = [...records].reverse().find(r => r.type === 'workout');
             if (!lastWorkout) return;
 
-            // 清除当前选择
             selectedParts.clear();
             document.querySelectorAll('.muscle-slice').forEach(p => p.classList.remove('is-active'));
             document.getElementById('btn-cardio').classList.remove('active');
             document.getElementById('btn-stretch').classList.remove('active');
 
-            // 恢复部位
             const parts = lastWorkout.parts.split(' · ');
             parts.forEach(p => {
                 selectedParts.add(p);
@@ -303,12 +305,10 @@
                 }
             });
 
-            // 恢复重量
             const weightValue = parseInt(lastWorkout.weight);
             document.getElementById('weight-slider').value = weightValue;
             document.getElementById('weight-val').innerText = lastWorkout.weight;
             
-            // 恢复颜色
             const colorDiv = document.querySelector(`[data-color="${lastWorkout.color}"]`);
             if (colorDiv) selectColor(colorDiv);
 
@@ -316,10 +316,9 @@
             if (window.navigator.vibrate) window.navigator.vibrate(20);
         }
 
-        // --- 训练逻辑 ---
         function selectColor(el) { 
-            document.querySelectorAll('#color-palette div').forEach(d => d.classList.remove('ring-indigo-400','ring-2','scale-110')); 
-            el.classList.add('ring-indigo-400','ring-2','scale-110'); 
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected')); 
+            el.classList.add('selected'); 
             selectedColor = el.getAttribute('data-color'); 
         }
 
@@ -391,7 +390,6 @@
             }
         };
 
-        // --- 补剂逻辑 ---
         function renderSupps() {
             const container = document.getElementById('supp-list');
             container.innerHTML = suppConfigs.map(s => `
